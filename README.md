@@ -4,9 +4,7 @@ San Francisco Movie Location Mapping
 
 ### Live Demo
 
-```
-Coming Soon!
-```
+You can check out a live version [here](http://sfmapproject.s3-website.ca-central-1.amazonaws.com)
 
 ## Built With
 
