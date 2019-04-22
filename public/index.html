@@ -1,6 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <style>
+      .nav-footer {
+        background: #25348c;
+        border: none;
+        color: #25348c;
+        font-size: 15px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-weight: 400;
+        line-height: 24px;
+        padding-bottom: 2em;
+        padding-top: 2em;
+        position: relative;
+      }
+      .nav-footer .sitemap {
+        display: flex;
+        justify-content: space-between;
+        margin: 0 auto 3em;
+        max-width: 1080px;
+      }
+      .nav-footer .sitemap div {
+        flex: 1;
+      }
+      .nav-footer .sitemap h5,
+      .nav-footer .sitemap h5 > a,
+      .nav-footer .sitemap h6,
+      .nav-footer .sitemap h6 > a {
+        color: #fff;
+        margin: 0 0 10px;
+        font-size: 14px;
+        color: inherit;
+        font-weight: 600;
+        line-height: 1.25;
+        margin-bottom: 16px;
+        margin-top: 1.5em;
+      }
+      .nav-footer .copyright {
+        color: hsla(0, 0%, 100%, 0.4);
+        text-align: center;
+      }
+      .nav-footer .sitemap a {
+        color: hsla(0, 0%, 100%, 0.6);
+        display: block;
+        margin: 2px -10px;
+        padding: 3px 10px;
+      }
+      a,
+      a:hover {
+        color: hsla(0, 0%, 100%, 0.6);
+        text-decoration: none;
+      }
+    </style>
     <meta charset="utf-8" />
     <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta
@@ -8,35 +60,43 @@
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
     <meta name="theme-color" content="#000000" />
-
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>Movie Mapper</title>
+    <title>SF Movies</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
+    <footer class="nav-footer" id="footer">
+      <section class="sitemap">
+        <div>
+          <a
+            href="www.linkedin.com/in/ken-hare"
+            target="_blank"
+            rel="noreferrer noopener"
+            >Linked In</a
+          >
+        </div>
+        <div>
+          <a
+            href="https://github.com/kenadian/Uber-SFMovies"
+            target="_blank"
+            rel="noreferrer noopener"
+            >GitHub</a
+          >
+        </div>
+        <div>
+          <a
+            href="http://sfmapproject.s3-website.ca-central-1.amazonaws.com"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            &copy;Ken Hare</a
+          >
+          &copy;Ken Hare
+        </div>
+      </section>
+    </footer>
   </body>
 </html>
