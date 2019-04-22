@@ -1,8 +1,9 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import PropTypes from "prop-types";
 
 import Drawer from "@material-ui/core/Drawer";
-import classNames from "classnames";
+
 import { withStyles } from "@material-ui/core/styles";
 
 import List from "@material-ui/core/List";
@@ -64,27 +65,53 @@ class ToolDrawer extends Component {
           </IconButton>
         </div>
         <Divider />
-        <div className={classes.movieInfo}>
-          <Typography variant="h5">Movie Title</Typography>
-          <Typography variant="body1">1999</Typography>
-          <Typography variant="h6">Actors</Typography>
+        {this.props.movieDetails && (
+          <div className={classes.movieInfo}>
+            <Typography variant="h5">
+              {this.props.movieDetails.title}
+            </Typography>
+            <Typography variant="body1">
+              {this.props.movieDetails.release_year}
+            </Typography>
+            <Typography variant="h6">Actors</Typography>
 
-          <Typography variant="body1">Actor 1, Actor 2, Actor 3</Typography>
-          <Typography variant="h6">Writer</Typography>
+            <Typography variant="body1">
+              {this.props.movieDetails.actor_1
+                ? `${this.props.movieDetails.actor_1}, `
+                : ""}
+              {this.props.movieDetails.actor_2
+                ? `${this.props.movieDetails.actor_2}`
+                : ""}
+              {this.props.movieDetails.actor_3 ? `, ` : ""}
+              {this.props.movieDetails.actor_3
+                ? `${this.props.movieDetails.actor_3}`
+                : ""}
+            </Typography>
+            <Typography variant="h6">Writer</Typography>
 
-          <Typography variant="body1">Writer's Name</Typography>
-          <Typography variant="h6">Director</Typography>
+            <Typography variant="body1">
+              {this.props.movieDetails.writer}
+            </Typography>
+            <Typography variant="h6">Director</Typography>
 
-          <Typography variant="body1">Directors Name</Typography>
+            <Typography variant="body1">
+              {this.props.movieDetails.director}
+            </Typography>
 
-          <Typography variant="h6">Production Company</Typography>
+            <Typography variant="h6">Production Company</Typography>
 
-          <Typography variant="body1">Production Comp. Name</Typography>
-          <Typography variant="h6">Distributor</Typography>
+            <Typography variant="body1">
+              {this.props.movieDetails.production_company}
+            </Typography>
+            <Typography variant="h6">Distributor</Typography>
 
-          <Typography variant="body1">Distributor's Name</Typography>
-        </div>
+            <Typography variant="body1">
+              {this.props.movieDetails.distributor}
+            </Typography>
+          </div>
+        )}
         <Divider />
+
         <List>
           <ListItem button onClick={this.props.clearMarkers}>
             <ListItemIcon>
@@ -119,6 +146,15 @@ class ToolDrawer extends Component {
 ToolDrawer.propTypes = {
   showMarkers: PropTypes.func,
   deleteMarkers: PropTypes.func,
-  clearMarkers: PropTypes.func
+  clearMarkers: PropTypes.func,
+  badLocations: PropTypes.array
 };
-export default withStyles(styles, { withTheme: true })(ToolDrawer);
+function mapStateToProps(state) {
+  return { movieDetails: state.movies.movieDetails };
+}
+export default withStyles(styles, { withTheme: true })(
+  connect(
+    mapStateToProps,
+    null
+  )(ToolDrawer)
+);

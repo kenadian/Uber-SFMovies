@@ -2,17 +2,19 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import Autocomplete from "react-autocomplete";
+import classNames from "classnames";
+
 import AppBar from "@material-ui/core/AppBar";
 import InputBase from "@material-ui/core/InputBase";
-import Input from "@material-ui/core/Input";
+
 import Toolbar from "@material-ui/core/Toolbar";
 import IconButton from "@material-ui/core/IconButton";
 import { fade } from "@material-ui/core/styles/colorManipulator";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
+import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
-import classNames from "classnames";
+
 import MenuIcon from "@material-ui/icons/Menu";
 import SearchIcon from "@material-ui/icons/Search";
 import { withStyles } from "@material-ui/core/styles";
@@ -21,11 +23,15 @@ import {
   fetchByTitle,
   clearMovieAC
 } from "../actions/movie_actions";
-import Menu from "@material-ui/core/Menu";
-import MenuItem from "@material-ui/core/MenuItem";
-const drawerWidth = 240;
+
 //TODO position the hamburger on the right using flex
 const styles = theme => ({
+  grow: {
+    flexGrow: 1
+  },
+  title: {
+    paddingLeft: 50
+  },
   menuButton: {
     marginLeft: 12,
     marginRight: 20
@@ -62,7 +68,8 @@ const styles = theme => ({
   inputRoot: {
     color: "inherit",
     width: "100%",
-    fontSize: 24
+    fontSize: 24,
+    flexGrow: 1
   },
   inputInput: {
     paddingTop: theme.spacing.unit,
@@ -78,10 +85,10 @@ const styles = theme => ({
   searchListOff: { display: "none" },
   searchListOn: {
     position: "absolute",
-    // width: 600,
-    // left: 400,
     paddingLeft: 35,
     backgroundColor: "white",
+    maxHeight: "50vh",
+    overflow: "scroll",
     zIndex: 100
   }
 });
@@ -90,27 +97,42 @@ class SearchBar extends Component {
     super(props);
     this.state = { value: "", markerData: [] };
   }
-
-  //   handleOnClick = () => {
-  //     this.props.lookupLocation(document.getElementById("term").value);
-  //     this.setState({ value: document.getElementById("term").value });
-  //   };
-
+  /**
+   * @description
+   * Called when a movie is selected from the search menu.
+   * The result data is used to lookup location data to
+   * plot markers on map. Clears the autoLookup query.
+   * @param title
+   * @memberof SearchBar
+   */
   handleOnSelect = title => {
-    this.props.deleteMarkers();
-    this.props
-      .fetchByTitle(title)
+    const {
+      deleteMarkers,
+      fetchByTitle,
+      getLocationData,
+      clearMovieAC
+    } = this.props;
+    // remove existing markers
+    deleteMarkers();
+
+    // Get the movies that match the title
+    // then
+    fetchByTitle(title)
       .then(results => {
-        console.log(results);
-        results.payload.data.forEach(element => {
-          this.props.lookupLocation(element.locations);
-        });
+        const movie = results.payload.data;
+        getLocationData(movie);
       })
-      .then(this.props.clearMovieAC);
+      .then(() => {
+        clearMovieAC();
+        this.props.handleDrawerOpen();
+      })
+      .catch(error =>
+        console.error("An error occured when looking up movie info")
+      );
   };
 
   render() {
-    const { classes, theme } = this.props;
+    const { classes } = this.props;
     const searchResults = this.props.movieSearchResults;
     const { open } = this.props.open;
     return (
@@ -121,6 +143,9 @@ class SearchBar extends Component {
         })}
       >
         <Toolbar disableGutters={!open}>
+          <Typography variant="h6" color="inherit" className={classes.title}>
+            SF Movies
+          </Typography>
           <div className={classes.search}>
             <div className={classes.searchIcon}>
               <SearchIcon />
@@ -141,7 +166,7 @@ class SearchBar extends Component {
                 id: "term",
                 placeholder: "Film Title (min 3 letters)",
                 // className: classes.uiWidget,
-                style: { height: 40, fontSize: 12, width: 300, marginLeft: 25 },
+                style: { height: 40, fontSize: 22, width: 400, marginLeft: 25 },
                 autoFocus: true
               }}
               getItemValue={item => {
@@ -151,6 +176,9 @@ class SearchBar extends Component {
               value={this.state.value}
               onChange={(event, value) => {
                 this.setState({ value: value });
+                if (event.target.value.length === 0) {
+                  this.props.handleDrawerClose();
+                }
                 if (event.target.value.length >= 3) {
                   this.props.fetchMovieAC(value);
                 }
@@ -172,14 +200,6 @@ class SearchBar extends Component {
                         ? classes.searchListOff
                         : classes.searchListOn
                     }
-                    // style={{
-                    //   position: "absolute",
-                    //   // width: 600,
-                    //   // left: 400,
-                    //   paddingLeft: 35,
-                    //   backgroundColor: "white",
-                    //   zIndex: 100
-                    // }}
                   >
                     {children}
                   </List>
@@ -210,7 +230,7 @@ class SearchBar extends Component {
               type="text"
             />
           </div>
-
+          <div className={classes.grow} />
           <IconButton
             color="inherit"
             aria-label="Open drawer"
@@ -226,11 +246,15 @@ class SearchBar extends Component {
 }
 
 SearchBar.propTypes = {
+  handleDrawerOpen: PropTypes.func,
   fetchMovieAC: PropTypes.func,
   fetchByTitle: PropTypes.func,
   clearMovieAC: PropTypes.func,
   lookupLocation: PropTypes.func,
-  movieSearchResults: PropTypes.array
+  createMarkers: PropTypes.func,
+  getLocationData: PropTypes.func.isRequired,
+  movieSearchResults: PropTypes.array,
+  open: PropTypes.bool
 };
 
 function mapStateToProps(state) {
@@ -243,4 +267,3 @@ export default withStyles(styles, { withTheme: true })(
     { fetchMovieAC, fetchByTitle, clearMovieAC }
   )(SearchBar)
 );
-// export default withStyles(styles, { withTheme: true })(ToolDrawer);
