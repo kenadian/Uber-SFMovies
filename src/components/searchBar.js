@@ -95,7 +95,10 @@ const styles = theme => ({
 class SearchBar extends Component {
   constructor(props) {
     super(props);
-    this.state = { value: "", markerData: [] };
+    this.state = {
+      value: "",
+      markerData: []
+    };
   }
   /**
    * @description

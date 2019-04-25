@@ -5,6 +5,7 @@ import MainMap from "./components/map.js";
 import SearchBar from "./components/searchBar";
 import ToolDrawer from "./components/toolDrawer";
 import OnboardOverlay from "./components/onboardOverlay";
+import Footer from "./components/footer";
 import {
   fetchMovieAC,
   fetchMovieByRow,
@@ -22,14 +23,38 @@ let badLocations = [];
  */
 function initMap() {
   let sanFrancisco = new window.google.maps.LatLng(37.7749295, -122.4364155);
+
   map = new window.google.maps.Map(document.getElementById("myMap"), {
-    zoom: 13,
+    zoom: calculateZoom(),
     mapTypeControlOptions: {
       style: window.google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
       position: window.google.maps.ControlPosition.BOTTOM_CENTER
     },
     center: sanFrancisco
   });
+  // console.log(map);
+  window.google.maps.event.addDomListener(window, "resize", initMap);
+  // window.google.maps.event.addDomListener(window, "load", initMap);
+}
+/**
+ * @description Calculates a value for zoom based on innerWidth
+ *
+ * @returns number
+ */
+function calculateZoom() {
+  //TODO Make this better
+  const large = 1024;
+
+  const small = 600;
+  const width = window.innerWidth;
+  if (width > large) {
+    return 13;
+  }
+  if (width <= large && width >= small) {
+    return 12;
+  }
+  if (width < small) return 11.2;
+  return 13;
 }
 
 /**
@@ -40,7 +65,6 @@ function initMap() {
  */
 function getLocationData(locations) {
   service = new window.google.maps.places.PlacesService(map);
-
   locations.forEach((movieLocation, index) => {
     setTimeout(function() {
       getLocationFromGoogle(movieLocation);
@@ -48,7 +72,7 @@ function getLocationData(locations) {
   });
   let sanFrancisco = new window.google.maps.LatLng(37.7749295, -122.4364155);
   map.setCenter(sanFrancisco);
-  map.setZoom(13);
+  map.setZoom(calculateZoom());
 }
 
 /**
@@ -129,6 +153,7 @@ function getLocationFromGoogle(movieLocation) {
     }
   });
 }
+
 /**
  *
  * @description builds the marker and places it. Saves marker to array for later use
@@ -156,6 +181,7 @@ function createMarker(place, imgUrl, funFacts) {
   });
   markers.push(marker);
 }
+
 /**
  * @description It puts the markers on the map.
  *
@@ -195,7 +221,9 @@ class App extends Component {
   handleOverlayClose = () => {
     //TODO add localstorage variable to prevent this from showing again
     localStorage.setItem("showSFMOverlay", false);
-    this.setState({ showOverlay: false });
+    this.setState({
+      showOverlay: false
+    });
   };
   render() {
     return (
@@ -219,6 +247,7 @@ class App extends Component {
           open={this.state.open}
         />
         <MainMap id="myMap" initMap={initMap} />
+        <Footer />
       </div>
     );
   }
