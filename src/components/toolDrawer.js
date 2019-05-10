@@ -6,13 +6,16 @@ import Drawer from "@material-ui/core/Drawer";
 
 import { withStyles } from "@material-ui/core/styles";
 
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemText from "@material-ui/core/ListItemText";
-import Typography from "@material-ui/core/Typography";
-import Divider from "@material-ui/core/Divider";
-import IconButton from "@material-ui/core/IconButton";
+import {
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+  Divider,
+  IconButton,
+  Link
+} from "@material-ui/core/";
 
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
@@ -20,7 +23,7 @@ import DeleteForever from "@material-ui/icons/DeleteForever";
 import ToggleOff from "@material-ui/icons/ToggleOff";
 import ToggleOn from "@material-ui/icons/ToggleOn";
 
-const drawerWidth = 240;
+const drawerWidth = "25%";
 
 const styles = theme => ({
   drawer: {
@@ -42,6 +45,9 @@ const styles = theme => ({
   }
 });
 class ToolDrawer extends Component {
+  handleLocationClick = event => {
+    this.props.getLocationData(event.currentTarget.getAttribute("value"));
+  };
   render() {
     const { classes, theme } = this.props;
 
@@ -108,18 +114,45 @@ class ToolDrawer extends Component {
             <Typography variant="body1">
               {this.props.movieDetails.distributor}
             </Typography>
+            <Typography variant="h6">
+              {this.props.movieLocations.length} Locations{" "}
+              <Link onClick={this.props.showAllLocations}>Show All</Link>
+            </Typography>
+            {this.props.movieLocations &&
+              this.props.movieLocations.map((loc, index) => {
+                return (
+                  <Typography key={loc[":id"]} variant="body1">
+                    <Link
+                      key={loc[":id"]}
+                      className={classes.link}
+                      onClick={this.handleLocationClick}
+                      value={loc.locations}
+                    >
+                      {loc.locations}
+                    </Link>
+                  </Typography>
+                );
+              })}
           </div>
         )}
         <Divider />
 
         <List>
-          <ListItem button onClick={this.props.clearMarkers}>
+          <ListItem
+            button
+            disabled={!this.props.movieDetails}
+            onClick={this.props.clearMarkers}
+          >
             <ListItemIcon>
               <ToggleOff />
             </ListItemIcon>
             <ListItemText primary="Hide Markers" />
           </ListItem>
-          <ListItem button onClick={this.props.showMarkers}>
+          <ListItem
+            button
+            disabled={!this.props.movieDetails}
+            onClick={this.props.showMarkers}
+          >
             <ListItemIcon>
               <ToggleOn />
             </ListItemIcon>
@@ -128,7 +161,11 @@ class ToolDrawer extends Component {
         </List>
         <Divider />
         <List>
-          <ListItem button onClick={this.props.deleteMarkers}>
+          <ListItem
+            button
+            disabled={!this.props.movieDetails}
+            onClick={this.props.deleteMarkers}
+          >
             <ListItemIcon style={{ color: "red" }}>
               <DeleteForever />
             </ListItemIcon>
@@ -139,6 +176,38 @@ class ToolDrawer extends Component {
             </ListItemText>
           </ListItem>
         </List>
+        <Divider />
+        <Typography variant="body1">
+          <Link
+            color="primary"
+            href="https://www.linkedin.com/in/ken-hare"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            LinkedIn
+          </Link>
+        </Typography>
+        <Typography variant="body1">
+          <Link
+            color="primary"
+            href="https://github.com/kenadian/Uber-SFMovies"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            GitHub
+          </Link>
+        </Typography>
+
+        <Typography variant="body1">
+          <Link
+            color="primary"
+            href="http://sfmapproject.s3-website.ca-central-1.amazonaws.com"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            Ken Hare
+          </Link>
+        </Typography>
       </Drawer>
     );
   }
@@ -150,7 +219,10 @@ ToolDrawer.propTypes = {
   badLocations: PropTypes.array
 };
 function mapStateToProps(state) {
-  return { movieDetails: state.movies.movieDetails };
+  return {
+    movieDetails: state.movies.movieDetails,
+    movieLocations: state.movies.locations
+  };
 }
 export default withStyles(styles, { withTheme: true })(
   connect(

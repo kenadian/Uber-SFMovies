@@ -3,13 +3,17 @@ import Typography from "@material-ui/core/Typography";
 import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
 import { withStyles } from "@material-ui/core/styles";
-import Dialog from "@material-ui/core/Dialog";
+
 const styles = theme => {
   console.log(theme);
   return {
     root: {
       flexGrow: 1,
       backgroundColor: "rgba(0, 2, 27, 0.55)",
+      backgroundImage: `url("images/splash.jpg")`,
+      backgroundRepeat: "no-repeat",
+      backgroundAttachment: "scroll",
+      backgroundPosition: "50% 50%",
       width: "100vw",
       height: "100vh",
       padding: "20%",
@@ -26,14 +30,8 @@ const styles = theme => {
     }
   };
 };
-// const handleOverlayClick = () => {
-//   this.props.handleOverlayClose("Invasion of the Body Snatchers");
-// };
-class OnboardOverlay extends Component {
-  constructor(props) {
-    super(props);
-  }
 
+class OnboardOverlay extends Component {
   render(props) {
     const { classes } = this.props;
     return (

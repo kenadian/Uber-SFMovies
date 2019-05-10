@@ -4,27 +4,28 @@ import PropTypes from "prop-types";
 import Autocomplete from "react-autocomplete";
 import classNames from "classnames";
 
-import AppBar from "@material-ui/core/AppBar";
-import InputBase from "@material-ui/core/InputBase";
+import {
+  AppBar,
+  InputBase,
+  Toolbar,
+  IconButton,
+  List,
+  ListItem,
+  Typography,
+  ListItemText
+} from "@material-ui/core";
 
-import Toolbar from "@material-ui/core/Toolbar";
-import IconButton from "@material-ui/core/IconButton";
 import { fade } from "@material-ui/core/styles/colorManipulator";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import Typography from "@material-ui/core/Typography";
-import ListItemText from "@material-ui/core/ListItemText";
-
+import { withStyles } from "@material-ui/core/styles";
 import MenuIcon from "@material-ui/icons/Menu";
 import SearchIcon from "@material-ui/icons/Search";
-import { withStyles } from "@material-ui/core/styles";
+
 import {
   fetchMovieAC,
   fetchByTitle,
   clearMovieAC
 } from "../actions/movie_actions";
 
-//TODO position the hamburger on the right using flex
 const styles = theme => ({
   grow: {
     flexGrow: 1
@@ -100,39 +101,75 @@ class SearchBar extends Component {
       markerData: []
     };
   }
-  /**
-   * @description
-   * Called when a movie is selected from the search menu.
-   * The result data is used to lookup location data to
-   * plot markers on map. Clears the autoLookup query.
-   * @param title
-   * @memberof SearchBar
-   */
-  handleOnSelect = title => {
-    const {
-      deleteMarkers,
-      fetchByTitle,
-      getLocationData,
-      clearMovieAC
-    } = this.props;
-    // remove existing markers
-    deleteMarkers();
 
-    // Get the movies that match the title
-    // then
-    fetchByTitle(title)
-      .then(results => {
-        const movie = results.payload.data;
-        getLocationData(movie);
-      })
-      .then(() => {
-        clearMovieAC();
-        this.props.handleDrawerOpen();
-      })
-      .catch(error =>
-        console.error("An error occured when looking up movie info")
-      );
-  };
+  // componentDidUpdate() {
+  //   debugger;
+  //   if (this.props.startSearch) {
+  //     this.handleOnSelect(this.props.startSearch);
+  //   }
+  // }
+  // /**
+  //  * @description
+  //  * Called when a movie is selected from the search menu.
+  //  * The result data is used to lookup location data to
+  //  * plot markers on map. Clears the autoLookup query.
+  //  * @param title
+  //  * @memberof SearchBar
+  //  */
+  // handleOnSelect = title => {
+  //   const {
+  //     deleteMarkers,
+  //     fetchByTitle,
+  //     getLocationData,
+  //     clearMovieAC,
+  //     mapLocations,
+  //     getLocationDataInBackground
+  //   } = this.props;
+  //   // remove existing marker
+  //   deleteMarkers();
+  //   fetchByTitle(title)
+  //     .then(results => {
+  //       const request = results.payload.data.map(value => {
+  //         return {
+  //           request: {
+  //             query: `${value.locations} San Francisco`,
+  //             fields: ["name", "opening_hours", "photos", "geometry"]
+  //           },
+  //           locationDetails: value
+  //         };
+  //       });
+
+  //       return request;
+  //     })
+
+  //     .then(res => {
+  //       clearMovieAC();
+  //       this.props.handleDrawerOpen();
+  //       return res;
+  //     })
+  //     .then(getLocationDataInBackground)
+  //     .catch(error =>
+  //       console.error(`An error occured when looking up movie info`, error)
+  //     );
+
+  //   // fetchByTitle(title)
+  //   //   .then(results => {
+  //   //     debugger;
+  //   //     const movieLocations = results.payload.data.map(
+  //   //       value => value.locations
+  //   //     );
+  //   //     const movie = results.payload.data;
+  //   //     getLocationData(movie);
+  //   //     mapLocations(results.payload.data);
+  //   //   })
+  //   //   .then(() => {
+  //   //     clearMovieAC();
+  //   //     this.props.handleDrawerOpen();
+  //   //   })
+  //   //   .catch(error =>
+  //   //     console.error(`An error occured when looking up movie info`, error)
+  //   //   );
+  // };
 
   render() {
     const { classes } = this.props;
@@ -176,21 +213,29 @@ class SearchBar extends Component {
                 return String(item.term);
               }}
               items={searchResults ? searchResults : []}
-              value={this.state.value}
+              value={
+                this.props.startSearch
+                  ? this.props.startSearch
+                  : this.state.value
+              }
               onChange={(event, value) => {
                 this.setState({ value: value });
                 if (event.target.value.length === 0) {
                   this.props.handleDrawerClose();
                 }
                 if (event.target.value.length >= 3) {
-                  this.props.fetchMovieAC(value);
+                  this.props
+                    .fetchMovieAC(value)
+                    .catch(err =>
+                      console.error(`Can't get value for AutoComplete${err}`)
+                    );
                 }
               }}
               onSelect={(value, item) => {
                 this.setState({
                   value: item.title
                 });
-                this.handleOnSelect(item.title);
+                this.props.handleOnSelect(item.title);
 
                 //
               }}
@@ -249,24 +294,33 @@ class SearchBar extends Component {
 }
 
 SearchBar.propTypes = {
+  mapLocations: PropTypes.func,
   handleDrawerOpen: PropTypes.func,
   fetchMovieAC: PropTypes.func,
   fetchByTitle: PropTypes.func,
   clearMovieAC: PropTypes.func,
   lookupLocation: PropTypes.func,
   createMarkers: PropTypes.func,
-  getLocationData: PropTypes.func.isRequired,
   movieSearchResults: PropTypes.array,
+  movieLocationResults: PropTypes.array,
   open: PropTypes.bool
 };
 
 function mapStateToProps(state) {
-  return { movieSearchResults: state.movies.searchResults };
+  return {
+    movieSearchResults: state.movies.searchResults,
+    movieLocationResults: state.maps.movieLocationData,
+    googlePlaceResultsOverLimit: state.maps.googlePlaceResultsOverLimit
+  };
 }
 
 export default withStyles(styles, { withTheme: true })(
   connect(
     mapStateToProps,
-    { fetchMovieAC, fetchByTitle, clearMovieAC }
+    {
+      fetchMovieAC,
+      fetchByTitle,
+      clearMovieAC
+    }
   )(SearchBar)
 );

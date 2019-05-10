@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 
 import { Provider } from "react-redux";
 import { createStore, applyMiddleware, compose } from "redux";
+
 import ReduxPromise from "redux-promise"; //handles promises
 import rootReducers from "./reducers";
 
@@ -17,7 +18,7 @@ const composeEnhancers =
       latency: 0
     })) ||
   compose;
-const store = createStore(
+export const store = createStore(
   rootReducers,
   composeEnhancers(applyMiddleware(ReduxPromise))
 );

@@ -1,4 +1,5 @@
 import axios from "axios";
+import mapLocations from "./map_actions";
 
 export const FETCH_MOVIE_AC = "FETCH_MOVIE_AC";
 export const FETCH_MOVIE_BY_ROW = "FETCH_MOVIE_BY_ROW";
@@ -8,12 +9,20 @@ export const CLEAR_MOVIE_AC = "CLEAR_MOVIE_AC";
 export const CLEAR_MOVIE_HISTORY = "CLEAR_MOVIE_HISTORY";
 
 export function fetchMovieAC(term) {
-  //https://data.sfgov.org/resource/wwmu-gmzc.json?$where=title like '%18%'
-  const url = `https://data.sfgov.org/resource/wwmu-gmzc.json?$query=SELECT%20distinct%20title%20WHERE%20title%20like%20%27%25${term}%25%27%20and%20locations%20IS%20NOT%20NULL`;
-  const request = axios.get(url, {
-    headers: {}
-  });
+  const query = encodeURIComponent(
+    `SELECT distinct title WHERE lower(title) like '%${term.toLowerCase()}%' and locations IS NOT NULL`
+  );
 
+  const url = `https://data.sfgov.org/resource/wwmu-gmzc.json?$query=${query}`;
+
+  const request = axios
+    .get(url, {
+      headers: {}
+    })
+    .catch(err => {
+      localStorage.setItem("savedSearch", url);
+      console.error(`Problem getting your movie locations${err}`);
+    });
   return {
     type: FETCH_MOVIE_AC,
     payload: request
@@ -21,8 +30,10 @@ export function fetchMovieAC(term) {
 }
 
 export function fetchByTitle(term) {
-  //https://data.sfgov.org/resource/wwmu-gmzc.json?$where=title like '%18%'
-  const url = `https://data.sfgov.org/resource/wwmu-gmzc.json?$query=SELECT%20*,%20:id%20WHERE%20title%20like%20%27%25${term}%25%27`;
+  const query = encodeURIComponent(
+    `SELECT *, :id WHERE title like '%${term}%'`
+  );
+  const url = `https://data.sfgov.org/resource/wwmu-gmzc.json?$query=${query}`;
   const request = axios.get(url, {
     headers: {}
   });
@@ -34,7 +45,6 @@ export function fetchByTitle(term) {
 }
 
 export function fetchMovieByRow(rowId) {
-  //TODO change url to correct endpoint parameters
   const url = `https://data.sfgov.org/resource/wwmu-gmzc/${rowId}.json`;
   const request = axios.get(url, {
     headers: {}
@@ -47,7 +57,6 @@ export function fetchMovieByRow(rowId) {
 }
 
 export function fetchMovieAll(sort, order = "ASC") {
-  //TODO change url to correct endpoint parameters
   const url = `https://data.sfgov.org/resource/wwmu-gmzc.json?$order=${sort}%20${order}&$limit=20&$offset=100`;
   const request = axios.get(url, {
     headers: {}
