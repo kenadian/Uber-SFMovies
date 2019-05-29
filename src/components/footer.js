@@ -4,7 +4,6 @@ import { withStyles } from "@material-ui/core/styles";
 import Grid from "@material-ui/core/Grid";
 import Link from "@material-ui/core/Link";
 const styles = theme => {
-  console.log(theme);
   return {
     root: {
       flexGrow: 1
