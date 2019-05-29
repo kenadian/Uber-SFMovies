@@ -1,26 +1,23 @@
 import { store } from "../index";
 
 export const MAP_INIT = "MAP_INIT";
-export const MAP_LOCATIONS = "MAP_LOCATIONS";
 export const MAP_CREATE_MARKER = "MAP_CREATE_MARKER";
 export const MAP_GET_LOCATION_DATA = "MAP_GET_LOCATION_DATA";
 export const MAP_SET_MAP_ON_ALL = "MAP_SET_MAP_ON_ALL";
 export const MAP_CLEAR_MARKERS = "MAP_CLEAR_MARKERS";
 export const MAP_SHOW_MARKERS = "MAP_SHOW_MARKERS";
-
+export const IS_GETTING_GOOGLE_PLACE_RESULTS =
+  "IS_GETTING_GOOGLE_PLACE_RESULTS";
 export const MAP_DELETE_MARKERS = "MAP_DELETE_MARKERS";
 export const MAP_GET_LOC_DATA_IN_BG = "MAP_GET_LOC_DATA_IN_BG";
-export const MAP_FIND_PLACE_RESULTS = "MAP_FIND_PLACE_RESULTS";
-export const MAP_FIND_PLACE_RESULTS_OVERLIMIT =
-  "MAP_FIND_PLACE_RESULTS_OVERLIMIT";
-export const MAP_RESET_PLACE_RESULTS_OVERLIMIT =
-  "MAP_RESET_PLACE_RESULTS_OVERLIMIT";
-export const MAP_FIND_PLACE_ZERO_RESULTS = "MAP_FIND_PLACE_ZERO_RESULTS";
+export const MAP_CLEAR_GOOGLE_PLACE_RESULTS = "MAP_CLEAR_GOOGLE_PLACE_RESULTS";
 export const MAP_SAVE_PLACES_LOCALSTORAGE = "MAP_SAVE_PLACES_LOCALSTORAGE";
 export const MAP_SHOW_ALL_LOCATIONS = "MAP_SHOW_ALL_LOCATIONS";
-let map, service, infowindow;
-let markers = [];
+export const MAP_SET_ONBOARD_COOKIE = "MAP_SET_ONBOARD_COOKIE";
 
+let movieMap, service, infowindow;
+let markers = [];
+let sanFrancisco = { lat: 37.7749295, lng: -122.4364155 };
 /**
  * @description Calculates a value for zoom based on innerWidth
  *
@@ -43,25 +40,33 @@ function calculateZoom() {
   if (width < small) return 11.2;
   return 13;
 }
+
+export function clearGooglePlaceResults() {
+  return {
+    type: MAP_CLEAR_GOOGLE_PLACE_RESULTS
+  };
+}
+export function setOnboardingCookie() {
+  document.cookie = "showSFMOverlay=false";
+  return {
+    type: MAP_SET_ONBOARD_COOKIE
+  };
+}
+
+//TODO This is likely not needed
 export function savePlacesToLocalStorage() {
-  console.log("save to local", store.getState().maps.googlePlaceResults.length);
-  // TODO add an id to googlePlaceResults to make it possible to compare the
-  // searched movie with the movies in local storage.
-  // {id:location[':id'],
-  //  results: [store.getState().maps.googlePlaceResults] }
-  // localStorage.setItem()
   return {
     type: MAP_SAVE_PLACES_LOCALSTORAGE
   };
 }
 /**
- * @description initialize the map and set some options.
+ * @description initialize the movieMap and set some options.
  *
  */
 export function initMap() {
-  let sanFrancisco = new window.google.maps.LatLng(37.7749295, -122.4364155);
+  // let sanFrancisco = new window.google.maps.LatLngLiteral(sanFrancisco)
 
-  map = new window.google.maps.Map(document.getElementById("myMap"), {
+  movieMap = new window.google.maps.Map(document.getElementById("myMap"), {
     zoom: calculateZoom(),
     mapTypeControlOptions: {
       style: window.google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
@@ -75,102 +80,108 @@ export function initMap() {
   };
 }
 
-export function findPlaceResults(result) {
+export function toggleIsGettingGooglePlaceResults(value) {
   return {
-    type: MAP_FIND_PLACE_RESULTS,
-    payload: result
+    type: IS_GETTING_GOOGLE_PLACE_RESULTS,
+    payload: value
   };
 }
 
-export function findPlaceResultsOverlimit(result) {
-  return {
-    type: MAP_FIND_PLACE_RESULTS_OVERLIMIT,
-    payload: result
-  };
-}
+export function getLocationDataInBackground(movieLocation) {
+  service = new window.google.maps.places.PlacesService(movieMap);
 
-export function findPlaceZeroResults(result) {
-  return {
-    type: MAP_FIND_PLACE_ZERO_RESULTS,
-    payload: result
-  };
-}
-
-export function resetPlaceResultsOverlimit() {
-  return {
-    type: MAP_RESET_PLACE_RESULTS_OVERLIMIT
-  };
-}
-
-function processLocations(locations) {
-  locations.forEach((movieLocation, index) => {
-    service.findPlaceFromQuery(movieLocation.request, function(
-      results,
-      status
-    ) {
-      if (status === "OK") {
-        for (let i = 0; i < results.length; i++) {
-          store.dispatch(
-            findPlaceResults({
-              places: results[i],
-              photo: results[0].hasOwnProperty("photos")
-                ? results[0].photos[0].getUrl()
-                : null,
-              funFacts: movieLocation.fun_facts
-            })
-          );
-        }
-      }
-      if (status === "OVER_QUERY_LIMIT") {
-        //dispatch action to store these in state until they can be retried
-        store.dispatch(
-          findPlaceResultsOverlimit({
-            request: movieLocation.request
-          })
-        );
-      }
-      if (status === "ZERO_RESULTS") {
-        //dispatch action to store these in state until they can be retried
-        store.dispatch(
-          findPlaceZeroResults({
-            locationDetails: movieLocation.locationDetails
-          })
-        );
-      }
-    });
-  });
-}
-
-export function getLocationDataInBackground(locations) {
-  let intervalID = window.setInterval(myCallback, 350);
-  service = new window.google.maps.places.PlacesService(map);
-  function myCallback() {
-    if (locations.length > 0) {
-      processLocations([locations.pop()]);
-    } else {
-      clearInterval(intervalID);
+  const results = new Promise(function(resolve, reject) {
+    if (movieLocation.locationDetails.hasOwnProperty("places")) {
+      resolve({
+        id: movieLocation.locationDetails[":id"]
+          ? movieLocation.locationDetails[":id"]
+          : movieLocation.locationDetails.id,
+        status: "OK",
+        places: [movieLocation.locationDetails.places],
+        funFacts: movieLocation.locationDetails.fun_facts,
+        dataSource: "db"
+      });
+      return;
     }
-  }
+    if (!movieLocation.locationDetails.hasOwnProperty("places")) {
+      service.findPlaceFromQuery(movieLocation.request, function(
+        results,
+        status
+      ) {
+        //TODO Trap for all status possibilities
+        if (status === "OK") {
+          // Use location name from server for marker name
+          // If I don't do this the locations listed are different from the marker
+          // on initial load.
+          results["0"].name = movieLocation.locationDetails.locations;
+
+          resolve({
+            id: movieLocation.locationDetails[":id"]
+              ? movieLocation.locationDetails[":id"]
+              : movieLocation.locationDetails.id,
+            status: status,
+            places: results,
+            funFacts: movieLocation.locationDetails.fun_facts,
+            dataSource: "server",
+            name: movieLocation.name
+          });
+        }
+        if (status === "OVER_QUERY_LIMIT") {
+          resolve({
+            id: movieLocation.locationDetails[":id"]
+              ? movieLocation.locationDetails[":id"]
+              : movieLocation.locationDetails.id,
+            status: status,
+            request: movieLocation.request,
+            dataSource: "server"
+          });
+        }
+        if (status === "ZERO_RESULTS") {
+          resolve({
+            id: movieLocation.locationDetails[":id"]
+              ? movieLocation.locationDetails[":id"]
+              : movieLocation.locationDetails.id,
+            status: status,
+            locationDetails: movieLocation.locationDetails,
+            dataSource: "server",
+            name: movieLocation.name
+          });
+        }
+      });
+    }
+  });
 
   return {
     type: MAP_GET_LOC_DATA_IN_BG,
-    payload: false
+    payload: results
   };
 }
 
-export function mapLocations(locations2) {
-  const requestLocations = locations2
-    .map(value => ({
-      query: `${value.locations} San Francisco`,
-      fields: ["name", "opening_hours", "photos", "geometry"]
-    }))
-    .forEach((value, index) => {});
-
-  return {
-    type: MAP_LOCATIONS
-  };
-}
 export function showAllLocations() {
+  store.getState().maps.googlePlaceResults.map(result => {
+    let imgUrl = "";
+
+    if (result.dataSource === "server") {
+      imgUrl = result.places[0].hasOwnProperty("photos")
+        ? result.places[0].photos[0].getUrl()
+        : null;
+    }
+    if (result.dataSource === "db") {
+      imgUrl = result.places[0].hasOwnProperty("photos")
+        ? result.places[0].photos[0].Url
+        : null;
+    }
+    store.dispatch(
+      createMarker(
+        result.places[0],
+        imgUrl,
+        result.funFacts,
+        result.places[0].name
+      )
+    );
+    movieMap.setCenter(sanFrancisco);
+  });
+
   return {
     type: MAP_SHOW_ALL_LOCATIONS
   };
@@ -180,71 +191,70 @@ export function showAllLocations() {
  * @description builds the marker and places it. Saves marker to array for later use
  * @param {*} place results from google
  * @param {*} imgUrl an image to use
- * @param {*} funFacts raw from movie database
+ * @param {*} funFacts raw  from movie database
  */
-export function createMarker(place, imgUrl, funFacts) {
+export function createMarker(place, imgUrl, funFacts, locName) {
+  // TODO Customize the marker and window content
   const placeImage = imgUrl ? `<img src=${imgUrl} width="250px" />` : "";
   const funFactsLayout = funFacts ? `<div>${funFacts}</div>` : "";
-  const markerWindowContent = `<div >
+  const markerWindowContent = `<div>
                                     ${placeImage}
-                                    <div>${place.name}</div>
+                                    <h2>${locName}<h2>
                                       ${funFactsLayout}
                                   </div>`;
 
   infowindow = new window.google.maps.InfoWindow({ maxWidth: 300 });
 
-  map.setCenter(place.geometry.location);
+  movieMap.setCenter(place.geometry.location);
   const marker = new window.google.maps.Marker({
-    map: map,
+    map: movieMap,
     position: place.geometry.location
   });
-  window.google.maps.event.addListener(map, "click", function() {
+  window.google.maps.event.addListener(movieMap, "click", function() {
     infowindow.close();
   });
   window.google.maps.event.addListener(marker, "click", function() {
     infowindow.setContent(markerWindowContent);
-    infowindow.open(map, marker);
+    infowindow.open(movieMap, marker);
   });
-
   markers.push(marker);
+
   return {
     type: MAP_CREATE_MARKER
   };
 }
-export function getLocationData(locations) {
-  service = new window.google.maps.places.PlacesService(map);
-
-  const request = {
-    query: `${locations} San Francisco`,
-    fields: ["name", "opening_hours", "photos", "geometry"]
-  };
-
-  service.findPlaceFromQuery(request, (results, status) => {
-    if (status === "OK") {
-      for (let i = 0; i < results.length; i++) {
-        createMarker(
-          results[i],
-          results[0].hasOwnProperty("photos")
-            ? results[0].photos[0].getUrl()
-            : null,
-          locations.fun_facts
-        );
-      }
-    }
-  });
+export function getLocationData(locations, locationID) {
+  store
+    .getState()
+    .maps.googlePlaceResults.filter(row => row.id === locationID)
+    .map(loc => {
+      loc.places.map(results => {
+        let photoUrl = "";
+        if (results.hasOwnProperty("photos")) {
+          if (results.photos[0].hasOwnProperty("getUrl")) {
+            photoUrl = results.photos[0].getUrl();
+          } else {
+            photoUrl = results.photos[0].Url;
+          }
+        } else {
+          photoUrl = null;
+        }
+        createMarker(results, photoUrl, loc.fun_facts, locations);
+      });
+    });
 
   return { type: MAP_GET_LOCATION_DATA };
 }
-export function setMapOnAll(map) {
+export function setMapOnAll(movieMap) {
   for (var i = 0; i < markers.length; i++) {
-    markers[i].setMap(map);
+    markers[i].setMap(movieMap);
   }
   return {
     type: MAP_SET_MAP_ON_ALL
   };
 }
 
-// Removes the markers from the map, but keeps them in the array.
+// Removes the markers from the movieMap, but keeps them in the array.
 export function clearMarkers() {
   setMapOnAll(null);
   return {
@@ -254,7 +264,7 @@ export function clearMarkers() {
 
 // Shows any markers currently in the array.
 export function showMarkers() {
-  setMapOnAll(map);
+  setMapOnAll(movieMap);
   return {
     type: MAP_SHOW_MARKERS
   };
