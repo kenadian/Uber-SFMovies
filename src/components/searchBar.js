@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import Autocomplete from "react-autocomplete";
 import classNames from "classnames";
-
+import CircularProgress from "@material-ui/core/CircularProgress";
 import {
   AppBar,
   InputBase,
@@ -98,83 +98,16 @@ class SearchBar extends Component {
     super(props);
     this.state = {
       value: "",
-      markerData: []
+      markerData: [],
+      isFetching: false
     };
   }
-
-  // componentDidUpdate() {
-  //   debugger;
-  //   if (this.props.startSearch) {
-  //     this.handleOnSelect(this.props.startSearch);
-  //   }
-  // }
-  // /**
-  //  * @description
-  //  * Called when a movie is selected from the search menu.
-  //  * The result data is used to lookup location data to
-  //  * plot markers on map. Clears the autoLookup query.
-  //  * @param title
-  //  * @memberof SearchBar
-  //  */
-  // handleOnSelect = title => {
-  //   const {
-  //     deleteMarkers,
-  //     fetchByTitle,
-  //     getLocationData,
-  //     clearMovieAC,
-  //     mapLocations,
-  //     getLocationDataInBackground
-  //   } = this.props;
-  //   // remove existing marker
-  //   deleteMarkers();
-  //   fetchByTitle(title)
-  //     .then(results => {
-  //       const request = results.payload.data.map(value => {
-  //         return {
-  //           request: {
-  //             query: `${value.locations} San Francisco`,
-  //             fields: ["name", "opening_hours", "photos", "geometry"]
-  //           },
-  //           locationDetails: value
-  //         };
-  //       });
-
-  //       return request;
-  //     })
-
-  //     .then(res => {
-  //       clearMovieAC();
-  //       this.props.handleDrawerOpen();
-  //       return res;
-  //     })
-  //     .then(getLocationDataInBackground)
-  //     .catch(error =>
-  //       console.error(`An error occured when looking up movie info`, error)
-  //     );
-
-  //   // fetchByTitle(title)
-  //   //   .then(results => {
-  //   //     debugger;
-  //   //     const movieLocations = results.payload.data.map(
-  //   //       value => value.locations
-  //   //     );
-  //   //     const movie = results.payload.data;
-  //   //     getLocationData(movie);
-  //   //     mapLocations(results.payload.data);
-  //   //   })
-  //   //   .then(() => {
-  //   //     clearMovieAC();
-  //   //     this.props.handleDrawerOpen();
-  //   //   })
-  //   //   .catch(error =>
-  //   //     console.error(`An error occured when looking up movie info`, error)
-  //   //   );
-  // };
 
   render() {
     const { classes } = this.props;
     const searchResults = this.props.movieSearchResults;
     const { open } = this.props.open;
+
     return (
       <AppBar
         position="fixed"
@@ -187,9 +120,17 @@ class SearchBar extends Component {
             SF Movies
           </Typography>
           <div className={classes.search}>
-            <div className={classes.searchIcon}>
-              <SearchIcon />
-            </div>
+            {!this.props.isGettingGooglePlaceResults && (
+              <div className={classes.searchIcon}>
+                <SearchIcon />
+              </div>
+            )}
+            {this.props.isGettingGooglePlaceResults && (
+              <div className={classes.searchIcon}>
+                <CircularProgress style={{ height: 20, width: 20 }} />
+              </div>
+            )}
+
             <Autocomplete
               renderInput={props => {
                 return (
@@ -199,6 +140,7 @@ class SearchBar extends Component {
                       input: classes.inputInput
                     }}
                     inputProps={props}
+                    disabled={this.props.isGettingGooglePlaceResults}
                   />
                 );
               }}
@@ -220,6 +162,7 @@ class SearchBar extends Component {
               }
               onChange={(event, value) => {
                 this.setState({ value: value });
+
                 if (event.target.value.length === 0) {
                   this.props.handleDrawerClose();
                 }
@@ -233,7 +176,8 @@ class SearchBar extends Component {
               }}
               onSelect={(value, item) => {
                 this.setState({
-                  value: item.title
+                  value: item.title,
+                  isFetching: true
                 });
                 this.props.handleOnSelect(item.title);
 
@@ -294,7 +238,6 @@ class SearchBar extends Component {
 }
 
 SearchBar.propTypes = {
-  mapLocations: PropTypes.func,
   handleDrawerOpen: PropTypes.func,
   fetchMovieAC: PropTypes.func,
   fetchByTitle: PropTypes.func,
@@ -309,8 +252,9 @@ SearchBar.propTypes = {
 function mapStateToProps(state) {
   return {
     movieSearchResults: state.movies.searchResults,
-    movieLocationResults: state.maps.movieLocationData,
-    googlePlaceResultsOverLimit: state.maps.googlePlaceResultsOverLimit
+    movieLocationResults: state.maps.movieLocationData
+    // isGettingGooglePlaceResults: state.maps.isGettingGooglePlaceResults
+    // googlePlaceResultsOverLimit: state.maps.googlePlaceResultsOverLimit
   };
 }
 
