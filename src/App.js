@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+
+import { openDB } from "idb/with-async-ittr.js";
 // import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import MainMap from "./components/map.js";
@@ -12,7 +14,8 @@ import {
   fetchMovieAll,
   clearMovieHistory,
   fetchByTitle,
-  clearMovieAC
+  clearMovieAC,
+  getViewedTitles
 } from "./actions/movie_actions";
 
 import {
@@ -22,15 +25,19 @@ import {
   showMarkers,
   deleteMarkers,
   getLocationDataInBackground,
+  clearGooglePlaceResults,
   getLocationData,
   savePlacesToLocalStorage,
-  showAllLocations
+  showAllLocations,
+  toggleIsGettingGooglePlaceResults,
+  setOnboardingCookie
 } from "./actions/map_actions";
 
 class App extends Component {
   state = { open: false, showOverlay: true, startSearch: null };
-  onComponentDidMount() {
-    this.props.initMap();
+  componentDidMount() {
+    this.props.getViewedTitles();
+    this.setState({ open: true });
   }
   handleDrawerOpen = () => {
     this.setState({ open: true });
@@ -40,6 +47,7 @@ class App extends Component {
     this.setState({ open: false });
   };
   handleOverlayClose = () => {
+    this.props.setOnboardingCookie();
     localStorage.setItem("showSFMOverlay", false);
     this.setState({
       showOverlay: false,
@@ -47,51 +55,96 @@ class App extends Component {
     });
     this.handleOnSelect("Invasion of the Body Snatchers");
   };
-  /**
-   * @description
-   * Called when a movie is selected from the search menu.
-   * The result data is used to lookup location data to
-   * plot markers on map. Clears the autoLookup query.
-   * @param title
-   * @memberof SearchBar
-   */
+
   handleOnSelect = title => {
     const {
       deleteMarkers,
       fetchByTitle,
       savePlacesToLocalStorage,
       clearMovieAC,
-      mapLocations,
-      getLocationDataInBackground
+
+      getLocationDataInBackground,
+      clearGooglePlaceResults,
+      getViewedTitles
     } = this.props;
+    // ;
 
     deleteMarkers();
-
+    //this is unnescessary with indexdb
     savePlacesToLocalStorage();
 
     fetchByTitle(title)
+      //returns data from either server or indexDB
       .then(results => {
-        const request = results.payload.data.map(value => {
+        const request = results.payload.data.map(loc => {
           return {
             request: {
-              query: `${value.locations} San Francisco`,
+              query: `${loc.locations} San Francisco`,
               fields: ["name", "opening_hours", "photos", "geometry"]
             },
-            locationDetails: value
+            locationDetails: loc
           };
         });
+
+        request.dataSource = results.payload.data.dataSource;
 
         return request;
       })
 
-      .then(res => {
+      .then(requestObject => {
+        // use this to set a flag that tells getLocationDataInBackground where to get data from
+        //requestObject.dataSource==='server'
+        //requestObject.dataSource==='db'
+        let defaultTimeout = 0;
         clearMovieAC();
-        this.handleDrawerOpen();
-        return res;
+
+        if (requestObject && requestObject.length > 0) {
+          this.handleDrawerOpen();
+        }
+
+        if (requestObject.dataSource === "server") {
+          defaultTimeout = 350;
+        }
+
+        let overLimitTimeout = defaultTimeout * 4;
+
+        const getPlaceRecursive = (value, index, timeout) => {
+          this.props.toggleIsGettingGooglePlaceResults(true);
+          setTimeout(() => {
+            getLocationDataInBackground(value).then(response => {
+              if (
+                response.payload.status &&
+                response.payload.status === "OVER_QUERY_LIMIT"
+              ) {
+                this.props.toggleIsGettingGooglePlaceResults(false);
+                getPlaceRecursive(value, index, overLimitTimeout);
+              }
+              if (response.payload.status && response.payload.status === "OK") {
+                if (index === requestObject.length - 1) {
+                  //TODO Add additional check to handle queing
+
+                  this.props.toggleIsGettingGooglePlaceResults(false);
+                }
+              }
+              if (
+                response.payload.status &&
+                response.payload.status === "ZERO_RESULTS"
+              ) {
+                this.props.toggleIsGettingGooglePlaceResults(false);
+              }
+            });
+          }, timeout);
+        };
+
+        clearGooglePlaceResults(); //clear redux state holding results
+
+        requestObject.forEach((value, index) => {
+          getPlaceRecursive(value, index, defaultTimeout * index);
+        });
       })
-      .then(getLocationDataInBackground)
+      .then(() => getViewedTitles())
       .catch(err =>
-        console.log(`An error occured when looking up movie info`, err)
+        console.error(`An error occured when looking up movie info`, err)
       );
   };
   render() {
@@ -99,7 +152,9 @@ class App extends Component {
     return (
       <div className="App">
         {this.state.showOverlay &&
-          localStorage.getItem("showSFMOverlay") === null && (
+          !document.cookie
+            .split(";")
+            .filter(item => item.includes("showSFMOverlay=false")).length && (
             <OnboardOverlay handleOverlayClose={this.handleOverlayClose} />
           )}
 
@@ -110,6 +165,7 @@ class App extends Component {
           open={this.state.open}
           startSearch={this.state.startSearch}
           handleOnSelect={this.handleOnSelect}
+          isGettingGooglePlaceResults={this.props.isGettingGooglePlaceResults}
         />
         <main>
           <ToolDrawer
@@ -120,6 +176,8 @@ class App extends Component {
             showMarkers={showMarkers}
             getLocationData={this.props.getLocationData}
             showAllLocations={this.props.showAllLocations}
+            isGettingGooglePlaceResults={this.props.isGettingGooglePlaceResults}
+            handleOnSelect={this.handleOnSelect}
           />
           <MainMap id="myMap" initMap={initMap} />
         </main>
@@ -130,8 +188,10 @@ class App extends Component {
 App.propTypes = {};
 function mapStateToProps(state) {
   return {
-    movie_actions: state.MovieReducer,
-    map_actions: state.MapReducer
+    // overLimit: state.maps.googlePlaceResultsOverLimit,
+    // isOverLimit: state.maps.overLimit
+
+    isGettingGooglePlaceResults: state.maps.isGettingGooglePlaceResults
   };
 }
 export default connect(
@@ -149,8 +209,13 @@ export default connect(
     deleteMarkers,
     fetchByTitle,
     getLocationDataInBackground,
+    clearGooglePlaceResults,
+
+    toggleIsGettingGooglePlaceResults,
     getLocationData,
     savePlacesToLocalStorage,
-    showAllLocations
+    showAllLocations,
+    setOnboardingCookie,
+    getViewedTitles
   }
 )(App);
