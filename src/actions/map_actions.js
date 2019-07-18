@@ -91,6 +91,9 @@ export function getLocationDataInBackground(movieLocation) {
   service = new window.google.maps.places.PlacesService(movieMap);
 
   const results = new Promise(function(resolve, reject) {
+    // Check if the places property has been set indicating the data has been retrieved from indexeddb
+    // and can be resolved without querying google
+
     if (movieLocation.locationDetails.hasOwnProperty("places")) {
       resolve({
         id: movieLocation.locationDetails[":id"]
@@ -158,6 +161,8 @@ export function getLocationDataInBackground(movieLocation) {
 }
 
 export function showAllLocations() {
+  //Todo make function composable
+  //return array of values that have been sucessfully plotted
   store.getState().maps.googlePlaceResults.map(result => {
     let imgUrl = "";
 
@@ -180,6 +185,7 @@ export function showAllLocations() {
       )
     );
     movieMap.setCenter(sanFrancisco);
+    movieMap.setZoom(calculateZoom());
   });
 
   return {
@@ -218,6 +224,7 @@ export function createMarker(place, imgUrl, funFacts, locName) {
     infowindow.open(movieMap, marker);
   });
   markers.push(marker);
+  movieMap.setZoom(16);
 
   return {
     type: MAP_CREATE_MARKER
