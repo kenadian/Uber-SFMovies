@@ -13,7 +13,8 @@ import {
   IconButton,
   Link,
   Drawer,
-  withStyles
+  withStyles,
+  Grid
 } from "@material-ui/core/";
 
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
@@ -27,6 +28,9 @@ import Place from "@material-ui/icons/Place";
 const drawerWidth = "25%";
 
 const styles = theme => ({
+  grow: {
+    flexGrow: 1
+  },
   drawer: {
     width: drawerWidth,
     flexShrink: 0
@@ -43,11 +47,6 @@ const styles = theme => ({
   },
   movieInfo: {
     padding: "11px 16px 11px 16px"
-  },
-  locIcons: {
-    fontSize: 22,
-    marginBottom: -3,
-    marginLeft: 5
   }
   // .loading-shading-mui {
   //   position: absolute;
@@ -75,9 +74,8 @@ class ToolDrawer extends Component {
     );
   };
   render() {
-    debugger;
     const { classes, theme } = this.props;
-
+    let photoUrl = "";
     return (
       <Drawer
         className={classes.drawer}
@@ -101,7 +99,7 @@ class ToolDrawer extends Component {
         {!this.props.movieDetails.hasOwnProperty("title") && (
           <Typography className={classes.movieInfo} variant="h6">
             Information about the title will show here. You can search for a
-            title or select a title from the "Previously Viewed" list.
+            title or select a saved title.
           </Typography>
         )}
         {this.props.movieDetails.hasOwnProperty("title") && (
@@ -175,10 +173,17 @@ class ToolDrawer extends Component {
                 const hasPlace = this.props.googlePlaceResults.filter(value => {
                   return value.id === loc[":id"];
                 });
+
                 const hasPhoto = this.props.googlePlaceResults.filter(value => {
                   if (value.places.length > 0) {
                     if (value.places[0].hasOwnProperty("photos")) {
-                      if (value.places[0].photos[0].hasOwnProperty("Url")) {
+                      // Need to check for both properties.
+                      // Url will be set when data comes from indexeddb
+                      // getUrl is a function returned from google
+                      if (
+                        value.places[0].photos[0].hasOwnProperty("Url") ||
+                        value.places[0].photos[0].hasOwnProperty("getUrl")
+                      ) {
                         if (value.id === loc[":id"]) {
                           return true;
                         }
@@ -186,31 +191,94 @@ class ToolDrawer extends Component {
                     }
                   }
                 });
+                if (hasPhoto.length > 0) {
+                  if (hasPhoto[0].places[0].hasOwnProperty("photos")) {
+                    if (
+                      hasPhoto[0].places[0].photos[0].hasOwnProperty("Url") ||
+                      hasPhoto[0].places[0].photos[0].hasOwnProperty("getUrl")
+                    ) {
+                      if (
+                        hasPhoto[0].places[0].photos[0].hasOwnProperty("Url")
+                      ) {
+                        photoUrl = hasPhoto[0].places[0].photos[0].Url;
+                      }
+                      if (
+                        hasPhoto[0].places[0].photos[0].hasOwnProperty("getUrl")
+                      ) {
+                        photoUrl = hasPhoto[0].places[0].photos[0].getUrl();
+                      }
+                    }
+                  }
+                }
+                // debugger;
+                // console.log(hasPhoto[0].places[0])
 
                 if (hasPlace.length > 0) {
                   return (
-                    <Typography key={loc[":id"]} variant="body1">
-                      <Link
-                        key={loc[":id"]}
-                        className={classes.link}
-                        onClick={this.handleLocationClick}
-                        value={loc.locations}
-                        data-id={loc[":id"]}
+                    <Grid
+                      key={index}
+                      container
+                      direction="row"
+                      justify="space-between"
+                      alignItems="center"
+                    >
+                      <Grid
+                        item
+                        style={{
+                          width: "75%"
+                        }}
                       >
-                        {loc.locations}
-                        <Place className={classes.locIcons} />
-                        {hasPhoto.length > 0 ? (
-                          <Photo className={classes.locIcons} />
-                        ) : null}
-                        {/* TODO the photo icon doesn't show on initial load from server. 
-                            hasPhoto.length is 0 when component is mounted*/}
-                      </Link>
-                    </Typography>
+                        <Typography key={loc[":id"]} variant="body1">
+                          <Link
+                            key={loc[":id"]}
+                            className={classes.link}
+                            onClick={this.handleLocationClick}
+                            value={loc.locations}
+                            data-id={loc[":id"]}
+                          >
+                            {loc.locations}
+                          </Link>
+                        </Typography>
+                      </Grid>
+                      <Grid item>
+                        <Grid container alignItems="center">
+                          <Grid item>
+                            <Link
+                              key={loc[":id"]}
+                              className={classes.link}
+                              onClick={this.handleLocationClick}
+                              value={loc.locations}
+                              data-id={loc[":id"]}
+                            >
+                              <Place />
+                            </Link>
+                          </Grid>
+                          <Grid>
+                            {hasPhoto.length > 0 ? (
+                              <Link href={photoUrl}>
+                                <Photo />
+                              </Link>
+                            ) : (
+                              <div style={{ width: 24 }} />
+                            )}
+                          </Grid>
+                        </Grid>
+                      </Grid>
+                    </Grid>
                   );
+                }
+                {
+                  /* TODO It would be nice to move these to the bottom of the list*/
                 }
                 if (hasPlace.length === 0) {
                   return (
-                    <Typography key={loc[":id"]} variant="body1">
+                    <Typography
+                      style={{
+                        width: "75%"
+                      }}
+                      key={loc[":id"]}
+                      variant="body1"
+                    >
                       {loc.locations}
                     </Typography>
                   );
@@ -218,31 +286,33 @@ class ToolDrawer extends Component {
               })}
           </div>
         )}
+        {/* {this.state.noPlace && <div>"Hello"</div>} */}
         <Divider />
+        {this.props.viewedTitles.length > 0 && (
+          <div className={classes.movieInfo}>
+            <Typography variant="h6">
+              Saved Title{this.props.viewedTitles.length > 1 && "s"}
+            </Typography>
+            {this.props.viewedTitles.length > 0 &&
+              this.props.viewedTitles.map((value, index) => {
+                //TODO add link to load movie details. Which means calling
 
-        <div className={classes.movieInfo}>
-          <Typography variant="h6">Previously Viewed</Typography>
-          {this.props.viewedTitles.length > 1 &&
-            this.props.viewedTitles.map((value, index) => {
-              //TODO add link to load movie details. Which means calling
-
-              return (
-                <Typography
-                  key={index}
-                  datavalue={value}
-                  onClick={e => {
-                    console.log(e.currentTarget.attributes.datavalue.value);
-                    this.props.handleOnSelect(
-                      e.currentTarget.attributes.datavalue.value
-                    );
-                  }}
-                >
-                  {value}
-                </Typography>
-              );
-            })}
-        </div>
-
+                return (
+                  <Typography
+                    key={index}
+                    datavalue={value}
+                    onClick={e => {
+                      this.props.handleOnSelect(
+                        e.currentTarget.attributes.datavalue.value
+                      );
+                    }}
+                  >
+                    {value}
+                  </Typography>
+                );
+              })}
+          </div>
+        )}
         <List>
           <ListItem
             button
