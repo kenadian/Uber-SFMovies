@@ -25,7 +25,6 @@ export default function(state = initialState, action) {
   //
   switch (action.type) {
     case MOVIE_GET_VIEWED_TITLES:
-      debugger;
       return { ...state, viewedTitles: action.payload };
     case FETCH_MOVIE_AC:
       return { ...state, searchResults: action.payload.data };

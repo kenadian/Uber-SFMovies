@@ -63,6 +63,9 @@ export default function(state = initialState, action) {
             value.places = JSON.parse(JSON.stringify(action.payload.places[0]));
             // check if there is a photo and store the Url
             if (action.payload.places[0].hasOwnProperty("photos")) {
+              //TODO to get all the photos map through action.payload.places[0].photos
+              // and getUrl()
+
               value.places.photos[0].Url = action.payload.places[0].photos[0].getUrl();
             }
             store.put(value);
@@ -81,7 +84,9 @@ export default function(state = initialState, action) {
       ) {
         // googlePlaceResults[action.payload.id] = [];
         // googlePlaceResults[action.payload.id].push(action.payload);
+
         googlePlaceResults.push(action.payload);
+
         return {
           ...state,
           googlePlaceResults
