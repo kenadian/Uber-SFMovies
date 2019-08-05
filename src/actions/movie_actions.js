@@ -30,7 +30,18 @@ export function fetchMovieAC(term) {
   };
 }
 export async function getViewedTitles() {
-  const db = openDB("movies", 1);
+  const db = openDB("movies", 1, {
+    upgrade(db) {
+      // const tx = db.transaction("locations", "readwrite");
+      const store = db.createObjectStore("locations", {
+        // The 'id' property of the object will be the key.
+        keyPath: "id",
+        // If it isn't explicitly set, create a value by auto incrementing.
+        autoIncrement: true
+      });
+      store.createIndex("title", "title");
+    }
+  });
   const result = await db.then(async db => {
     const tx = db.transaction("locations", "readwrite");
     const store = tx.objectStore("locations");
@@ -52,13 +63,23 @@ export async function getViewedTitles() {
 }
 
 export async function fetchByTitle(term) {
-  const db = openDB("movies", 1);
+  const db = openDB("movies", 1, {
+    upgrade(db) {
+      // const tx = db.transaction("locations", "readwrite");
+      const store = db.createObjectStore("locations", {
+        // The 'id' property of the object will be the key.
+        keyPath: "id",
+        // If it isn't explicitly set, create a value by auto incrementing.
+        autoIncrement: true
+      });
+      store.createIndex("title", "title");
+    }
+  });
 
   return await db.then(async db => {
     const tx = db.transaction("locations", "readwrite");
     const store = tx.objectStore("locations");
-    // const value = await store.get(loc[":id"]).then(result => result);
-    //
+
     const value = await db.getAllFromIndex("locations", "title", term);
     if (value.length > 0) {
       return {
@@ -96,7 +117,19 @@ export async function fetchByTitle(term) {
               actor_3
             } = loc;
 
-            const db = openDB("movies", 1);
+            const db = openDB("movies", 1, {
+              upgrade(db) {
+                // const tx = db.transaction("locations", "readwrite");
+                const store = db.createObjectStore("locations", {
+                  // The 'id' property of the object will be the key.
+                  keyPath: "id",
+                  // If it isn't explicitly set, create a value by auto incrementing.
+                  autoIncrement: true
+                });
+                store.createIndex("title", "title");
+              }
+            });
+
             db.then(async db => {
               const tx = db.transaction("locations", "readwrite");
               const store = tx.objectStore("locations");
