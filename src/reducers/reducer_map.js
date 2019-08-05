@@ -49,10 +49,21 @@ export default function(state = initialState, action) {
     case MAP_CLEAR_GOOGLE_PLACE_RESULTS:
       return { ...state, googlePlaceResults: [] };
     case MAP_GET_LOC_DATA_IN_BG:
-      // add places data to the location data already in indexeddb store
-      // only if the data comes from the server
       if (action.payload.dataSource === "server") {
-        openDB("movies", 1).then(async db => {
+        // add places data to the location data already in indexeddb store
+        // only if the data comes from the server
+        openDB("movies", 1, {
+          upgrade(db) {
+            // Don't create a transaction object manually here.
+            const store = db.createObjectStore("locations", {
+              // The 'id' property of the object will be the key.
+              keyPath: "id",
+              // If it isn't explicitly set, create a value by auto incrementing.
+              autoIncrement: true
+            });
+            store.createIndex("title", "title");
+          }
+        }).then(async db => {
           const store = db
             .transaction("locations", "readwrite")
             .objectStore("locations");
