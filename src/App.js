@@ -7,7 +7,7 @@ import MainMap from "./components/map.js";
 import SearchBar from "./components/searchBar";
 import ToolDrawer from "./components/toolDrawer";
 import OnboardOverlay from "./components/onboardOverlay";
-
+import { Modal } from "@material-ui/core/";
 import {
   fetchMovieAC,
   fetchMovieByRow,
@@ -34,7 +34,12 @@ import {
 } from "./actions/map_actions";
 
 class App extends Component {
-  state = { open: false, showOverlay: true, startSearch: null };
+  state = {
+    open: false,
+    showOverlay: true,
+    startSearch: null,
+    modalOpen: false
+  };
   componentDidMount() {
     this.props.getViewedTitles();
     this.setState({ open: true });
@@ -46,6 +51,15 @@ class App extends Component {
   handleDrawerClose = () => {
     this.setState({ open: false });
   };
+  handleModalOpen = event => {
+    this.setState({
+      modalOpen: true,
+      photoUrl: event.currentTarget.attributes.photourl.value
+    });
+  };
+  handleModalClose = () => {
+    this.setState({ modalOpen: false });
+  };
   handleOverlayClose = () => {
     this.props.setOnboardingCookie();
     localStorage.setItem("showSFMOverlay", false);
@@ -53,8 +67,27 @@ class App extends Component {
       showOverlay: false,
       startSearch: "Invasion of the Body Snatchers"
     });
+
+    //Simulate a movie selection
+    //Part of the onboarding process.
     this.handleOnSelect("Invasion of the Body Snatchers");
   };
+
+  getModalStyle() {
+    const top = 50;
+    const left = 50;
+
+    return {
+      top: `${top}%`,
+      left: `${left}%`,
+      transform: `translate(-${top}%, -${left}%)`,
+      position: "absolute",
+      maxWidth: "80%",
+      backgroundColor: "white",
+      padding: 4,
+      outline: "none"
+    };
+  }
 
   handleOnSelect = title => {
     const {
@@ -149,6 +182,7 @@ class App extends Component {
   };
   render() {
     const { deleteMarkers, clearMarkers, showMarkers } = this.props;
+
     return (
       <div className="App">
         {this.state.showOverlay &&
@@ -157,7 +191,17 @@ class App extends Component {
             .filter(item => item.includes("showSFMOverlay=false")).length && (
             <OnboardOverlay handleOverlayClose={this.handleOverlayClose} />
           )}
-
+        <Modal
+          aria-labelledby="simple-modal-title"
+          aria-describedby="simple-modal-description"
+          open={this.state.modalOpen}
+          onClose={this.handleModalClose}
+          style={{ display: "flex", alignItems: "center" }}
+        >
+          <div style={this.getModalStyle()}>
+            <img src={this.state.photoUrl} style={{ maxWidth: 1400 }} />
+          </div>
+        </Modal>
         <SearchBar
           handleDrawerClose={this.handleDrawerClose}
           handleDrawerOpen={this.handleDrawerOpen}
@@ -178,6 +222,8 @@ class App extends Component {
             showAllLocations={this.props.showAllLocations}
             isGettingGooglePlaceResults={this.props.isGettingGooglePlaceResults}
             handleOnSelect={this.handleOnSelect}
+            handleModalOpen={this.handleModalOpen}
+            handleModalClose={this.handleModalClose}
           />
           <MainMap id="myMap" initMap={initMap} />
         </main>
@@ -210,7 +256,6 @@ export default connect(
     fetchByTitle,
     getLocationDataInBackground,
     clearGooglePlaceResults,
-
     toggleIsGettingGooglePlaceResults,
     getLocationData,
     savePlacesToLocalStorage,
