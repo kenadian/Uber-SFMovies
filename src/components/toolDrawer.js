@@ -67,6 +67,9 @@ const styles = theme => ({
 });
 
 class ToolDrawer extends Component {
+  state = {
+    open: false
+  };
   handleLocationClick = event => {
     this.props.getLocationData(
       event.currentTarget.getAttribute("value"),
@@ -210,8 +213,6 @@ class ToolDrawer extends Component {
                     }
                   }
                 }
-                // debugger;
-                // console.log(hasPhoto[0].places[0])
 
                 if (hasPlace.length > 0) {
                   return (
@@ -253,9 +254,14 @@ class ToolDrawer extends Component {
                               <Place />
                             </Link>
                           </Grid>
+
                           <Grid>
                             {hasPhoto.length > 0 ? (
-                              <Link href={photoUrl}>
+                              <Link
+                                target="blank"
+                                onClick={this.props.handleModalOpen}
+                                photoUrl={photoUrl}
+                              >
                                 <Photo />
                               </Link>
                             ) : (
@@ -390,6 +396,7 @@ class ToolDrawer extends Component {
     );
   }
 }
+
 ToolDrawer.propTypes = {
   showMarkers: PropTypes.func,
   deleteMarkers: PropTypes.func,
