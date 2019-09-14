@@ -1,12 +1,12 @@
 {
   "name": "moviemap",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^3.9.3",
     "@material-ui/icons": "^3.0.2",
     "@palmabit/react-cookie-law": "^0.2.4",
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "idb": "^4.0.3",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",
@@ -14,14 +14,15 @@
     "react-dom": "^16.8.6",
     "react-redux": "^7.0.2",
     "react-scripts": "2.1.8",
+    "redux": "^4.0.4",
     "redux-logger": "^3.0.6",
     "redux-promise": "^0.6.0"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && aws s3 cp ./build s3://sfmapproject --recursive --acl public-read",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "build": "react-scripts build && aws s3 cp ./build s3://sfmapproject --recursive --acl public-read",
     "upload": "aws s3 cp ./build s3://sfmapproject --recursive --acl public-read"
   },
   "eslintConfig": {
