@@ -166,16 +166,22 @@ export function showAllLocations() {
   store.getState().maps.googlePlaceResults.map(result => {
     let imgUrl = "";
 
+    // use the dataSource flag to choose which property
+    // to use for the image url, if one exists.
+
     if (result.dataSource === "server") {
       imgUrl = result.places[0].hasOwnProperty("photos")
         ? result.places[0].photos[0].getUrl()
         : null;
     }
+
     if (result.dataSource === "db") {
       imgUrl = result.places[0].hasOwnProperty("photos")
         ? result.places[0].photos[0].Url
         : null;
     }
+
+    // Plot a marker
     store.dispatch(
       createMarker(
         result.places[0],
@@ -184,14 +190,17 @@ export function showAllLocations() {
         result.places[0].name
       )
     );
-    movieMap.setCenter(sanFrancisco);
-    movieMap.setZoom(calculateZoom());
+    return true;
   });
+
+  movieMap.setCenter(sanFrancisco);
+  movieMap.setZoom(calculateZoom());
 
   return {
     type: MAP_SHOW_ALL_LOCATIONS
   };
 }
+
 /**
  *
  * @description builds the marker and places it. Saves marker to array for later use
@@ -230,6 +239,7 @@ export function createMarker(place, imgUrl, funFacts, locName) {
     type: MAP_CREATE_MARKER
   };
 }
+
 export function getLocationData(locations, locationID) {
   store
     .getState()
@@ -252,6 +262,7 @@ export function getLocationData(locations, locationID) {
 
   return { type: MAP_GET_LOCATION_DATA };
 }
+
 export function setMapOnAll(movieMap) {
   for (var i = 0; i < markers.length; i++) {
     markers[i].setMap(movieMap);
