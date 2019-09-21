@@ -1,4 +1,4 @@
-import { openDB } from "idb/with-async-ittr.js";
+import { openMoviesIDB } from "../functions/idb";
 import {
   MAP_INIT,
   MAP_CREATE_MARKER,
@@ -52,18 +52,7 @@ export default function(state = initialState, action) {
       if (action.payload.dataSource === "server") {
         // add places data to the location data already in indexeddb store
         // only if the data comes from the server
-        openDB("movies", 1, {
-          upgrade(db) {
-            // Don't create a transaction object manually here.
-            const store = db.createObjectStore("locations", {
-              // The 'id' property of the object will be the key.
-              keyPath: "id",
-              // If it isn't explicitly set, create a value by auto incrementing.
-              autoIncrement: true
-            });
-            store.createIndex("title", "title");
-          }
-        }).then(async db => {
+        openMoviesIDB().then(async db => {
           const store = db
             .transaction("locations", "readwrite")
             .objectStore("locations");
