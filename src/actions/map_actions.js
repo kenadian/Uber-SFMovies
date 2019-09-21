@@ -1,4 +1,4 @@
-import { store } from "../index";
+import store from "../store";
 
 export const MAP_INIT = "MAP_INIT";
 export const MAP_CREATE_MARKER = "MAP_CREATE_MARKER";
@@ -53,12 +53,6 @@ export function setOnboardingCookie() {
   };
 }
 
-//TODO This is likely not needed
-export function savePlacesToLocalStorage() {
-  return {
-    type: MAP_SAVE_PLACES_LOCALSTORAGE
-  };
-}
 /**
  * @description initialize the movieMap and set some options.
  *
@@ -89,7 +83,6 @@ export function toggleIsGettingGooglePlaceResults(value) {
 
 export function getLocationDataInBackground(movieLocation) {
   service = new window.google.maps.places.PlacesService(movieMap);
-
   const results = new Promise(function(resolve, reject) {
     // Check if the places property has been set indicating the data has been retrieved from indexeddb
     // and can be resolved without querying google
@@ -111,7 +104,6 @@ export function getLocationDataInBackground(movieLocation) {
         results,
         status
       ) {
-        //TODO Trap for all status possibilities
         if (status === "OK") {
           // Use location name from server for marker name
           // If I don't do this the locations listed are different from the marker
@@ -150,6 +142,18 @@ export function getLocationDataInBackground(movieLocation) {
             name: movieLocation.name
           });
         }
+        if (
+          status === "OVER_DAILY_LIMIT" ||
+          status === "REQUEST_DENIED" ||
+          status === "INVALID_REQUEST" ||
+          status === "UNKNOWN_ERROR"
+        ) {
+          console.error(`The server responded with a status of ${status}.`);
+          resolve({
+            status: status,
+            dataSource: "server"
+          });
+        }
       });
     }
   });
@@ -180,7 +184,6 @@ export function showAllLocations() {
         ? result.places[0].photos[0].Url
         : null;
     }
-
     // Plot a marker
     store.dispatch(
       createMarker(
@@ -257,7 +260,9 @@ export function getLocationData(locations, locationID) {
           photoUrl = null;
         }
         createMarker(results, photoUrl, loc.fun_facts, locations);
+        return true;
       });
+      return true;
     });
 
   return { type: MAP_GET_LOCATION_DATA };
