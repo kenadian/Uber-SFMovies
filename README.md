@@ -1,4 +1,4 @@
-<img src="http://sfmapproject.s3-website.ca-central-1.amazonaws.com/images/splash.jpg" width "400px" />
+<img src="http://sfmapproject.s3-website.ca-central-1.amazonaws.com/images/splash.jpg" width="400px" />
 
 # Project Title
 
