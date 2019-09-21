@@ -38,7 +38,6 @@ class MovieInfo extends Component {
             {!isGettingGooglePlaceResults &&
               movieLocations &&
               movieLocations.map((loc, index) => {
-                console.log("movieLocations.map", index);
                 return (
                   <LocationDetail
                     key={index}
