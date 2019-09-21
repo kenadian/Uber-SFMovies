@@ -1,8 +1,7 @@
 import React, { Component } from "react";
 
-import { withStyles } from "@material-ui/core/styles";
-import Grid from "@material-ui/core/Grid";
-import Link from "@material-ui/core/Link";
+import { Typography, Link, withStyles } from "@material-ui/core/";
+
 const styles = theme => {
   return {
     root: {
@@ -29,49 +28,39 @@ class Footer extends Component {
   render(props) {
     const { classes } = this.props;
     return (
-      <footer id="footer">
-        <section className={classes.root}>
-          <Grid
-            className={classes.footerContainer}
-            container
-            spacing={24}
-            alignItems="center"
-            justify="center"
+      <div className={classes.movieInfo}>
+        <Typography variant="body1">
+          <Link
+            color="primary"
+            href="https://www.linkedin.com/in/ken-hare"
+            target="_blank"
+            rel="noreferrer noopener"
           >
-            <Grid className={classes.footerItem} item xs={2}>
-              <Link
-                color="primary"
-                href="https://www.linkedin.com/in/ken-hare"
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                LinkedIn
-              </Link>
-            </Grid>
-            <Grid className={classes.footerItem} item xs={2}>
-              <Link
-                color="primary"
-                href="https://github.com/kenadian/Uber-SFMovies"
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                GitHub
-              </Link>
-            </Grid>
+            LinkedIn
+          </Link>
+        </Typography>
+        <Typography variant="body1">
+          <Link
+            color="primary"
+            href="https://github.com/kenadian/Uber-SFMovies"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            GitHub
+          </Link>
+        </Typography>
 
-            <Grid className={classes.footerItem} item xs={2}>
-              <Link
-                color="primary"
-                href="http://sfmapproject.s3-website.ca-central-1.amazonaws.com"
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                Ken Hare
-              </Link>
-            </Grid>
-          </Grid>
-        </section>
-      </footer>
+        <Typography variant="body1">
+          <Link
+            color="primary"
+            href="http://sfmapproject.s3-website.ca-central-1.amazonaws.com"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            Ken Hare
+          </Link>
+        </Typography>
+      </div>
     );
   }
 }

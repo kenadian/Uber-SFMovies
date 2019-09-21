@@ -83,7 +83,6 @@ export default function(state = initialState, action) {
           }
         });
       }
-
       let googlePlaceResults =
         state.googlePlaceResults.length > 0
           ? state.googlePlaceResults.slice(0)

@@ -14,12 +14,6 @@ let initialState = {
   locations: [],
   movieDetails: {}
 };
-//TODO I think this is unnesecary
-// if (localStorage.getItem("movieHistory")) {
-//   initialState = JSON.parse(localStorage.getItem("movieHistory"));
-// } else {
-//   initialState = [];
-// }
 
 export default function(state = initialState, action) {
   //
@@ -48,24 +42,19 @@ export default function(state = initialState, action) {
 
       if (action.payload.hasOwnProperty("config")) {
         // data comes from server
-
         payloadLocation = action.payload.data;
       }
 
       if (!action.payload.hasOwnProperty("config")) {
         // data comes from indexDB
-
-        //add key ':id' copy 'id' when no config property
+        //add key ':id' copy 'id' when no config property.
         payloadLocation = Object.keys(action.payload.data).map(key => {
-          // return;
           var tempObj = JSON.parse(JSON.stringify(action.payload.data[key]));
-          // let tempObj = Object.create(action.payload.data[key]);
           tempObj[":id"] = action.payload.data[key].id;
           return tempObj;
         });
       }
 
-      // TODO Rename movieDetails to Current Movie
       return {
         ...state,
         locations: payloadLocation,
