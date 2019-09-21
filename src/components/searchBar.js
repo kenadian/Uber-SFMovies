@@ -155,11 +155,7 @@ class SearchBar extends Component {
                 return String(item.term);
               }}
               items={searchResults ? searchResults : []}
-              value={
-                this.props.startSearch
-                  ? this.props.startSearch
-                  : this.state.value
-              }
+              value={this.state.value}
               onChange={(event, value) => {
                 this.setState({ value: value });
 
