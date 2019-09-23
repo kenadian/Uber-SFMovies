@@ -47,9 +47,11 @@ I found that retrieving place data needed to plot markers from Google needed the
 - [Socrata data platform](https://www.tylertech.com/products/socrata)
   and a whole lot more.
 
-### Live Demo
+## Live Demo
 
-You can check out a live version [here](http://sfmapproject.s3-website.ca-central-1.amazonaws.com)
+You can check out a live version [here].(http://sfmapproject.s3-website.ca-central-1.amazonaws.com)
+
+This is currently meant only as a desktop app and has not been optimized for small screens.
 
 ## Install
 
@@ -57,7 +59,7 @@ You can check out a live version [here](http://sfmapproject.s3-website.ca-centra
     $ cd Uber-SFMovies
     $ npm install
 
-### Configure app
+## Configure app
 
 You will need to supply your own Google Maps Javascript API key. Instructions on how to obtain your key can be [found here](https://developers.google.com/maps/documentation/javascript/get-api-key).
 
@@ -75,9 +77,9 @@ Add this file to your gitignore file before publishing your project to a reposit
 
     $ npm run build
 
-## Versioning
+## Tests
 
-Git
+I haven't included any tests in this project.
 
 ## Authors
 
