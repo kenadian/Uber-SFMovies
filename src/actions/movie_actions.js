@@ -98,11 +98,10 @@ export function fetchMovieByRow(rowId) {
   };
 }
 
-export function fetchMovieAll(sort, order = "ASC") {
-  const url = `https://data.sfgov.org/resource/wwmu-gmzc.json?$order=${sort}%20${order}&$limit=20&$offset=100`;
-  const request = axios.get(url, {
-    headers: {}
-  });
+export function fetchMovieAll(sort = "title", order = "ASC") {
+  console.log(fetchMovieAll);
+  const url = `https://data.sfgov.org/resource/wwmu-gmzc.json?$order=title%20${order}`;
+  const request = axios.get(url);
 
   return {
     type: FETCH_MOVIE_ALL,
