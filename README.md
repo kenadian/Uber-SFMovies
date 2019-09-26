@@ -51,7 +51,7 @@ I found that retrieving place data needed to plot markers from Google needed the
 
 You can check out a live version [here].(http://sfmapproject.s3-website.ca-central-1.amazonaws.com)
 
-This is currently meant only as a desktop app and has not been optimized for small screens.
+This is currently meant only as a desktop app.
 
 ## Install
 
