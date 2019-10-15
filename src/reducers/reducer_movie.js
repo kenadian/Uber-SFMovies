@@ -5,7 +5,8 @@ import {
   CLEAR_MOVIE_HISTORY,
   FETCH_MOVIE_BY_TITLE,
   CLEAR_MOVIE_AC,
-  MOVIE_GET_VIEWED_TITLES
+  MOVIE_GET_VIEWED_TITLES,
+  MOVIE_DELETE_VIEWED_TITLES
 } from "../actions/movie_actions";
 
 let initialState = {
@@ -18,6 +19,8 @@ let initialState = {
 export default function(state = initialState, action) {
   //
   switch (action.type) {
+    case MOVIE_DELETE_VIEWED_TITLES:
+      return { ...state, viewedTitles: action.payload };
     case MOVIE_GET_VIEWED_TITLES:
       return { ...state, viewedTitles: action.payload };
     case FETCH_MOVIE_AC:
@@ -54,7 +57,6 @@ export default function(state = initialState, action) {
           return tempObj;
         });
       }
-
       return {
         ...state,
         locations: payloadLocation,
