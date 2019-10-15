@@ -1,4 +1,7 @@
+import React from "react";
 import store from "../store";
+
+import { makeInfoWindowContent } from "../functions/map";
 
 export const MAP_INIT = "MAP_INIT";
 export const MAP_CREATE_MARKER = "MAP_CREATE_MARKER";
@@ -14,8 +17,11 @@ export const MAP_CLEAR_GOOGLE_PLACE_RESULTS = "MAP_CLEAR_GOOGLE_PLACE_RESULTS";
 export const MAP_SAVE_PLACES_LOCALSTORAGE = "MAP_SAVE_PLACES_LOCALSTORAGE";
 export const MAP_SHOW_ALL_LOCATIONS = "MAP_SHOW_ALL_LOCATIONS";
 export const MAP_SET_ONBOARD_COOKIE = "MAP_SET_ONBOARD_COOKIE";
+export const MAP_PLACES = "MAP_PLACES";
+export const MAP_GET_LOC_DATA_FROM_IDB = "MAP_GET_LOC_DATA_FROM_IDB";
+export const MAP_CLOSE_ALL_INFO_WINDOWS = "MAP_CLOSE_ALL_INFO_WINDOWS";
 
-let movieMap, service, infowindow;
+let movieMap, placesService;
 let markers = [];
 let sanFrancisco = { lat: 37.7749295, lng: -122.4364155 };
 /**
@@ -26,7 +32,6 @@ let sanFrancisco = { lat: 37.7749295, lng: -122.4364155 };
 function calculateZoom() {
   //TODO Make this better. Maybe access the material ui theme.
   // Pass the theme.breakpoints object or import here
-
   const large = 1024;
 
   const small = 600;
@@ -40,7 +45,12 @@ function calculateZoom() {
   if (width < small) return 11.2;
   return 13;
 }
-
+export function mapPlaces() {
+  store.dispatch(toggleIsGettingGooglePlaceResults(false));
+  return {
+    type: MAP_PLACES
+  };
+}
 export function clearGooglePlaceResults() {
   return {
     type: MAP_CLEAR_GOOGLE_PLACE_RESULTS
@@ -80,13 +90,19 @@ export function toggleIsGettingGooglePlaceResults(value) {
     payload: value
   };
 }
-
+export function getLocationDataFromIdb() {
+  return {
+    type: MAP_GET_LOC_DATA_FROM_IDB,
+    payload: null
+  };
+}
 export function getLocationDataInBackground(movieLocation) {
-  service = new window.google.maps.places.PlacesService(movieMap);
+  placesService = new window.google.maps.places.PlacesService(movieMap);
   const results = new Promise(function(resolve, reject) {
     // Check if the places property has been set indicating the data has been retrieved from indexeddb
     // and can be resolved without querying google
 
+    // todo remove the check for "places". Perform check in App.js
     if (movieLocation.locationDetails.hasOwnProperty("places")) {
       resolve({
         id: movieLocation.locationDetails[":id"]
@@ -100,7 +116,7 @@ export function getLocationDataInBackground(movieLocation) {
       return;
     }
     if (!movieLocation.locationDetails.hasOwnProperty("places")) {
-      service.findPlaceFromQuery(movieLocation.request, function(
+      placesService.findPlaceFromQuery(movieLocation.request, function(
         results,
         status
       ) {
@@ -137,9 +153,10 @@ export function getLocationDataInBackground(movieLocation) {
               ? movieLocation.locationDetails[":id"]
               : movieLocation.locationDetails.id,
             status: status,
-            locationDetails: movieLocation.locationDetails,
+            places: null,
+            funFacts: null,
             dataSource: "server",
-            name: movieLocation.name
+            name: null
           });
         }
         if (
@@ -168,30 +185,32 @@ export function showAllLocations() {
   //Todo make function composable
   //return array of values that have been sucessfully plotted
   store.getState().maps.googlePlaceResults.map(result => {
+    if (result.places === null) {
+      return false;
+    }
     let imgUrl = "";
 
     // use the dataSource flag to choose which property
     // to use for the image url, if one exists.
-
+    // todo the errors are from not filtering the googlePlacesData
     if (result.dataSource === "server") {
       imgUrl = result.places[0].hasOwnProperty("photos")
         ? result.places[0].photos[0].getUrl()
         : null;
     }
-
     if (result.dataSource === "db") {
       imgUrl = result.places[0].hasOwnProperty("photos")
         ? result.places[0].photos[0].Url
         : null;
     }
-    // Plot a marker
+    // Plot a marker position, imgUrl, funFacts, locName
     store.dispatch(
-      createMarker(
-        result.places[0],
+      createMarker({
+        position: result.places[0].geometry.location,
         imgUrl,
-        result.funFacts,
-        result.places[0].name
-      )
+        funFacts: result.funFacts,
+        locName: result.places[0].name
+      })
     );
     return true;
   });
@@ -211,31 +230,51 @@ export function showAllLocations() {
  * @param {*} imgUrl an image to use
  * @param {*} funFacts raw  from movie database
  */
-export function createMarker(place, imgUrl, funFacts, locName) {
-  // TODO Customize the marker and window content
-  const placeImage = imgUrl ? `<img src=${imgUrl} width="250px" />` : "";
-  const funFactsLayout = funFacts ? `<div>${funFacts}</div>` : "";
-  const markerWindowContent = `<div>
-                                    ${placeImage}
-                                    <h2>${locName}<h2>
-                                      ${funFactsLayout}
-                                  </div>`;
+export function createMarker(markerData) {
+  const {
+    position,
+    imgUrl,
+    funFacts,
+    locName,
+    openWindow = false
+  } = markerData;
 
-  infowindow = new window.google.maps.InfoWindow({ maxWidth: 300 });
+  // build an array to use for comparing current marker location name to locations already plotted
+  const markersLocNames = markers.map(value => {
+    return value.locName;
+  });
 
-  movieMap.setCenter(place.geometry.location);
-  const marker = new window.google.maps.Marker({
-    map: movieMap,
-    position: place.geometry.location
-  });
-  window.google.maps.event.addListener(movieMap, "click", function() {
-    infowindow.close();
-  });
-  window.google.maps.event.addListener(marker, "click", function() {
-    infowindow.setContent(markerWindowContent);
-    infowindow.open(movieMap, marker);
-  });
-  markers.push(marker);
+  // build the marker and save it to the markers array if this is the first marker plotted
+  // or the marker hasn't been plotted before
+  if (!markersLocNames.includes(locName) || markers.length === 0) {
+    const marker = new window.google.maps.Marker({
+      map: movieMap,
+      position,
+      locName
+    });
+    const infoWindowContent = makeInfoWindowContent(imgUrl, funFacts, locName); //builds html for infoWindow
+    const infoWindow = new window.google.maps.InfoWindow({ maxWidth: 300 });
+    // display the info window if markerData.openWindow:true
+    if (openWindow) {
+      infoWindow.setContent(infoWindowContent);
+      infoWindow.open(movieMap, marker);
+    }
+    // closes all info windows when the map is clicked
+    // this augments the default window close behaviour, click on the 'x'
+    window.google.maps.event.addListener(movieMap, "click", function() {
+      infoWindow.close();
+    });
+    // opens info window when marker is clicked
+    window.google.maps.event.addListener(marker, "click", function() {
+      infoWindow.setContent(infoWindowContent);
+      infoWindow.open(movieMap, marker);
+    });
+    // adds the marker to the markers array.
+    // used by hide, show, delete widgets
+    markers.push(marker);
+  }
+
+  movieMap.setCenter(position);
   movieMap.setZoom(16);
 
   return {
@@ -243,29 +282,32 @@ export function createMarker(place, imgUrl, funFacts, locName) {
   };
 }
 
-export function getLocationData(locations, locationID) {
-  store
+export function getLocationData(locName, locationID) {
+  const markerData = store
     .getState()
     .maps.googlePlaceResults.filter(row => row.id === locationID)
     .map(loc => {
-      loc.places.map(results => {
-        let photoUrl = "";
+      return loc.places.map(results => {
+        let imgUrl = "";
         if (results.hasOwnProperty("photos")) {
           if (results.photos[0].hasOwnProperty("getUrl")) {
-            photoUrl = results.photos[0].getUrl();
+            imgUrl = results.photos[0].getUrl();
           } else {
-            photoUrl = results.photos[0].Url;
+            imgUrl = results.photos[0].Url;
           }
         } else {
-          photoUrl = null;
+          imgUrl = null;
         }
-        createMarker(results, photoUrl, loc.fun_facts, locations);
-        return true;
+        return {
+          position: results.geometry.location,
+          imgUrl,
+          fun_facts: loc.fun_facts,
+          locName
+        };
       });
-      return true;
     });
 
-  return { type: MAP_GET_LOCATION_DATA };
+  return { type: MAP_GET_LOCATION_DATA, payload: markerData };
 }
 
 export function setMapOnAll(movieMap) {

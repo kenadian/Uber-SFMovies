@@ -12,12 +12,16 @@ import {
   IS_GETTING_GOOGLE_PLACE_RESULTS,
   MAP_SAVE_PLACES_LOCALSTORAGE,
   MAP_SHOW_ALL_LOCATIONS,
-  MAP_SET_ONBOARD_COOKIE
+  MAP_SET_ONBOARD_COOKIE,
+  MAP_PLACES,
+  MAP_GET_LOC_DATA_FROM_IDB,
+  MAP_CLOSE_ALL_INFO_WINDOWS
 } from "../actions/map_actions";
 
 let initialState = {
   locations: [],
   googlePlaceResults: [],
+  googlePlaceResults1: [],
   isGettingGooglePlaceResults: false,
   processingLocations: false,
   googlePlaceZeroResults: [],
@@ -26,11 +30,12 @@ let initialState = {
 
 export default function(state = initialState, action) {
   switch (action.type) {
+    case MAP_CLOSE_ALL_INFO_WINDOWS:
+      return { ...state };
     case MAP_SET_ONBOARD_COOKIE:
       return { ...state };
     case MAP_INIT:
       return { ...state };
-
     case MAP_CREATE_MARKER:
       return { ...state };
     case MAP_GET_LOCATION_DATA:
@@ -47,7 +52,9 @@ export default function(state = initialState, action) {
     case IS_GETTING_GOOGLE_PLACE_RESULTS:
       return { ...state, isGettingGooglePlaceResults: action.payload };
     case MAP_CLEAR_GOOGLE_PLACE_RESULTS:
-      return { ...state, googlePlaceResults: [] };
+      return { ...state, googlePlaceResults: [], googlePlaceResults1: [] };
+    case MAP_GET_LOC_DATA_FROM_IDB:
+      return { ...state };
     case MAP_GET_LOC_DATA_IN_BG:
       if (action.payload.dataSource === "server") {
         // add places data to the location data already in indexeddb store
@@ -72,30 +79,39 @@ export default function(state = initialState, action) {
           }
         });
       }
-      let googlePlaceResults =
-        state.googlePlaceResults.length > 0
-          ? state.googlePlaceResults.slice(0)
+      let googlePlaceResults1 =
+        state.googlePlaceResults1.length > 0
+          ? state.googlePlaceResults1.slice(0)
           : [];
 
       if (
         action.payload.status !== "undefined" &&
         action.payload.status === "OK"
       ) {
-        // googlePlaceResults[action.payload.id] = [];
-        // googlePlaceResults[action.payload.id].push(action.payload);
-
-        googlePlaceResults.push(action.payload);
+        googlePlaceResults1.push(action.payload);
 
         return {
           ...state,
-          googlePlaceResults
+          googlePlaceResults1
         };
       }
+      if (
+        action.payload.status !== "undefined" &&
+        action.payload.status === "ZERO_RESULTS"
+      ) {
+        googlePlaceResults1.places = null;
 
+        googlePlaceResults1.push(action.payload);
+        return {
+          ...state,
+          googlePlaceResults1
+        };
+      }
       return {
         ...state
       };
-
+    case MAP_PLACES:
+      return { ...state, googlePlaceResults: state.googlePlaceResults1 };
     case MAP_SAVE_PLACES_LOCALSTORAGE:
       localStorage.setItem("places", JSON.stringify(state.googlePlaceResults));
       return {
