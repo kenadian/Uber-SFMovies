@@ -1,5 +1,6 @@
-import React, { PureComponent, Component } from "react";
+import React, { PureComponent } from "react";
 import PropTypes from "prop-types";
+
 import {
   Typography,
   IconButton,
@@ -8,7 +9,6 @@ import {
   MenuItem,
   Button
 } from "@material-ui/core/";
-
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import DeleteIcon from "@material-ui/icons/Delete";
@@ -34,7 +34,7 @@ const styles = theme => ({
   }
 });
 
-class drawerHead extends Component {
+class drawerHead extends PureComponent {
   state = {
     anchorEl: null
   };
@@ -121,6 +121,9 @@ class drawerHead extends Component {
   }
 }
 drawerHead.propTypes = {
+  classes: PropTypes.object,
+  theme: PropTypes.object,
+  handleViewedTitlesClick: PropTypes.func,
   handleDeleteViewedTitles: PropTypes.func,
   handleDrawerClose: PropTypes.func,
   viewedTitles: PropTypes.array
