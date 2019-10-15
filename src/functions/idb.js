@@ -13,13 +13,32 @@ export function openMoviesIDB() {
   });
 }
 
-export async function getMovieFromIDB(term) {
+export function getMovieFromIDB(title) {
   const db = openMoviesIDB();
 
-  return await db.then(async db => {
+  return db.then(async db => {
     // If we get results it saves us going to the server.
     // Movie data isn't expected to change
-    return await db.getAllFromIndex("locations", "title", term);
+    return db.getAllFromIndex("locations", "title", title);
+  });
+}
+export function getAllMoviesFromIDB() {
+  const db = openMoviesIDB();
+  return db.then(async db => {
+    return await db.getAll("locations");
+  });
+}
+export function deleteMovieFromIDB(title) {
+  const db = openMoviesIDB();
+  return db.then(async db => {
+    // const result = await db.get("locations", "row-2p53_x7av~r824");
+    const titles = await db.getAllFromIndex("locations", "title", title);
+
+    titles.forEach(async movie => {
+      await db.delete("locations", movie.id);
+    });
+
+    return await getAllMoviesFromIDB();
   });
 }
 
