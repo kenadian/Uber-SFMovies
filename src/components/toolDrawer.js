@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 import Footer from "./footer";
 import MarkerControls from "./markerControls";
 import MovieInfo from "./movieInfo";
-
+import DrawerHead from "./drawerHeader";
 import {
   Typography,
   Divider,
@@ -32,7 +32,7 @@ const styles = theme => ({
   },
   drawerHeader: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-start",
     padding: "0 8px",
     ...theme.mixins.toolbar,
     justifyContent: "flex-start"
@@ -46,12 +46,7 @@ class ToolDrawer extends PureComponent {
   state = {
     open: false
   };
-  handleLocationClick = event => {
-    this.props.getLocationData(
-      event.currentTarget.getAttribute("value"),
-      event.currentTarget.getAttribute("data-id")
-    );
-  };
+
   handleViewedTitlesClick = event => {
     this.props.handleOnSelect(event.currentTarget.attributes.datavalue.value);
   };
@@ -68,51 +63,26 @@ class ToolDrawer extends PureComponent {
           paper: classes.drawerPaper
         }}
       >
-        <div className={classes.drawerHeader}>
-          <IconButton onClick={this.props.handleDrawerClose}>
-            {theme.direction === "rtl" ? (
-              <ChevronLeftIcon />
-            ) : (
-              <ChevronRightIcon />
-            )}
-          </IconButton>
-        </div>
-
+        <DrawerHead
+          handleDrawerClose={this.props.handleDrawerClose}
+          viewedTitles={this.props.viewedTitles}
+          handleViewedTitlesClick={this.handleViewedTitlesClick}
+          handleDeleteViewedTitles={this.props.handleDeleteViewedTitles}
+        />
         <Divider />
         <MovieInfo
           movieDetails={this.props.movieDetails}
-          // isGettingGooglePlaceResults={this.props.isGettingGooglePlaceResults}
-          // movieLocations={this.props.movieLocations}
-          showAllLocations={this.props.showAllLocations}
-          // googlePlaceResults={this.props.googlePlaceResults}
-          handleLocationClick={this.handleLocationClick}
+          handleShowAll={this.props.handleShowAll}
+          handleLocationClick={this.props.handleLocationClick}
           handleModalOpen={this.props.handleModalOpen}
+          handleCloseAllInfoWindows={this.props.handleCloseAllInfoWindows}
           theme={theme}
           classes={classes}
+          googlePlaceResults={this.props.googlePlaceResults}
         />
 
         <Divider />
-        {this.props.viewedTitles.length > 0 && (
-          <div className={classes.movieInfo}>
-            <Typography variant="h6">
-              Saved Title{this.props.viewedTitles.length > 1 && "s"}
-            </Typography>
-            {this.props.viewedTitles.length > 0 &&
-              this.props.viewedTitles.map((value, index) => {
-                //TODO add link to load movie details.
 
-                return (
-                  <Typography
-                    key={index}
-                    datavalue={value}
-                    onClick={this.handleViewedTitlesClick}
-                  >
-                    {value}
-                  </Typography>
-                );
-              })}
-          </div>
-        )}
         <MarkerControls
           movieDetails={this.props.movieDetails}
           clearMarkers={this.props.clearMarkers}
@@ -130,7 +100,9 @@ ToolDrawer.propTypes = {
   showMarkers: PropTypes.func,
   deleteMarkers: PropTypes.func,
   plotAllMarkers: PropTypes.func,
-  clearMarkers: PropTypes.func
+  clearMarkers: PropTypes.func,
+  getLocationData: PropTypes.func,
+  handleLocationClick: PropTypes.func
 };
 function mapStateToProps(state) {
   return {

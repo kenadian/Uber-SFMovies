@@ -1,65 +1,21 @@
-import React, { Component } from "react";
+import React, { PureComponent } from "react";
 import { connect } from "react-redux";
 import { Typography, Link, Grid } from "@material-ui/core/";
+import { PropTypes } from "prop-types";
 import Photo from "@material-ui/icons/Photo";
 import Place from "@material-ui/icons/Place";
-//TODO move logic from component to here
-// function getPhoto() {
-//   return true;
-// }
-
-class LocationDetail extends Component {
+class LocationDetail extends PureComponent {
   render() {
     const {
-      googlePlaceResults,
       loc,
       classes,
       index,
       handleLocationClick,
-      handleModalOpen
+      handleModalOpen,
+      hasPhoto,
+      hasPlace,
+      photoUrl
     } = this.props;
-
-    let photoUrl = "";
-    const hasPlace = googlePlaceResults.filter(value => {
-      return value.id === loc[":id"];
-    });
-
-    const hasPhoto = googlePlaceResults.filter(value => {
-      if (value.places.length > 0) {
-        if (value.places[0].hasOwnProperty("photos")) {
-          // Need to check for both properties.
-          // Url will be set when data comes from indexeddb
-          // getUrl is a function returned from google
-          if (
-            value.places[0].photos[0].hasOwnProperty("Url") ||
-            value.places[0].photos[0].hasOwnProperty("getUrl")
-          ) {
-            if (value.id === loc[":id"]) {
-              return true;
-            }
-          }
-          return false;
-        }
-        return false;
-      }
-      return false;
-    });
-
-    if (hasPhoto.length > 0) {
-      if (hasPhoto[0].places[0].hasOwnProperty("photos")) {
-        if (
-          hasPhoto[0].places[0].photos[0].hasOwnProperty("Url") ||
-          hasPhoto[0].places[0].photos[0].hasOwnProperty("getUrl")
-        ) {
-          if (hasPhoto[0].places[0].photos[0].hasOwnProperty("Url")) {
-            photoUrl = hasPhoto[0].places[0].photos[0].Url;
-          }
-          if (hasPhoto[0].places[0].photos[0].hasOwnProperty("getUrl")) {
-            photoUrl = hasPhoto[0].places[0].photos[0].getUrl();
-          }
-        }
-      }
-    }
     return (
       <React.Fragment>
         {hasPlace.length > 0 && (
@@ -152,9 +108,20 @@ class LocationDetail extends Component {
     );
   }
 }
+LocationDetail.propTypes = {
+  key: PropTypes.number,
+  loc: PropTypes.object,
+  index: PropTypes.number,
+  classes: PropTypes.object,
+  hasPlace: PropTypes.array,
+  hasPhoto: PropTypes.array,
+  photoUrl: PropTypes.string,
+  handleLocationClick: PropTypes.func,
+  handleModalOpen: PropTypes.func
+};
+
 function mapStateToProps(state) {
   return {
-    googlePlaceResults: state.maps.googlePlaceResults,
     movieLocations: state.movies.locations
   };
 }
