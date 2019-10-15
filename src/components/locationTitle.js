@@ -7,22 +7,27 @@ class LocationTitle extends Component {
     return (
       <Typography variant="h6">
         {this.props.isGettingGooglePlaceResults && (
-          <CircularProgress
-            style={{
-              height: 20,
-              width: 20,
-              float: "left",
-              marginRight: 5,
-              marginTop: 5
-            }}
-          />
+          <div>
+            <CircularProgress
+              style={{
+                height: 20,
+                width: 20,
+                float: "left",
+                marginRight: 5,
+                marginTop: 5
+              }}
+            />
+            {"  "}
+            {this.props.progressCounter} of {this.props.movieLocationsLength}
+          </div>
         )}
+
         {!this.props.isGettingGooglePlaceResults
-          ? `${this.props.movieLocationsLength} `
+          ? `${this.props.movieLocationsLength} Locations   ` //extra space is necessary
           : null}
-        Locations{" "}
+        {/* todo the showall button should be disabled if their is no location data to show */}
         {!this.props.isGettingGooglePlaceResults && (
-          <Link onClick={this.props.showAllLocations}>Show All</Link>
+          <Link onClick={this.props.handleShowAll}>Show All</Link>
         )}
       </Typography>
     );
@@ -30,8 +35,9 @@ class LocationTitle extends Component {
 }
 LocationTitle.propTypes = {
   isGettingGooglePlaceResults: PropTypes.bool,
-  showAllLocations: PropTypes.func,
-  movieLocationsLength: PropTypes.number
+  movieLocationsLength: PropTypes.number,
+  progressCounter: PropTypes.number,
+  handleShowAll: PropTypes.func
 };
 function mapStateToProps(state) {
   return {
