@@ -2,30 +2,17 @@ import React, { Component } from "react";
 
 import { Typography, Link, withStyles } from "@material-ui/core/";
 
-const styles = theme => {
-  return {
-    root: {
-      flexGrow: 1
-    },
-
-    link: {
-      margin: theme.spacing.unit
-    },
-    footerItem: {
-      //   padding: theme.spacing.unit * 2,
-      textAlign: "center",
-      color: theme.palette.text.secondary,
-      padding: "5px 0 5px 0"
-    },
-    footerContainer: {
-      height: 100,
-      backgroundColor: theme.palette.background.default
-    }
-  };
+const styles = {
+  root: {
+    flexGrow: 1
+  },
+  movieInfo: {
+    padding: "11px 16px 11px 16px"
+  }
 };
 
 class Footer extends Component {
-  render(props) {
+  render() {
     const { classes } = this.props;
     return (
       <div className={classes.movieInfo}>
