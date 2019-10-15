@@ -6,38 +6,52 @@ import SearchBar from "./components/searchBar";
 import ToolDrawer from "./components/toolDrawer";
 import OnboardOverlay from "./components/onboardOverlay";
 import { Modal } from "@material-ui/core/";
+import store from "./store";
 import {
-  fetchMovieAC,
-  fetchMovieByRow,
-  fetchMovieAll,
-  clearMovieHistory,
   fetchByTitle,
   clearMovieAC,
-  getViewedTitles
+  getViewedTitles,
+  filterDuplicateLocations,
+  deleteViewedTitles
 } from "./actions/movie_actions";
 
 import {
   initMap,
-  setMapOnAll,
   clearMarkers,
   showMarkers,
   deleteMarkers,
-  getLocationDataInBackground,
   clearGooglePlaceResults,
-  getLocationData,
   showAllLocations,
   toggleIsGettingGooglePlaceResults,
-  setOnboardingCookie
+  setOnboardingCookie,
+  getLocationData,
+  createMarker,
+  mapPlaces
 } from "./actions/map_actions";
 
-import { getLocDataReqManager } from "./actions/location_actions";
+import { getLocDataReqManager, zeroCounters } from "./actions/location_actions";
 
 class App extends Component {
   state = {
     open: false,
     showOverlay: true,
     startSearch: null,
-    modalOpen: false
+    modalOpen: false,
+    errorMessage: ""
+  };
+  handleShowAll = () => {
+    this.props.showAllLocations();
+  };
+  handleLocationClick = event => {
+    // getLocationData can return multiple locations as an array
+    // Only will return the location that was clicked so I explicitly get that array element [0][0]
+    let markerData = this.props.getLocationData(
+      event.currentTarget.getAttribute("value"),
+      event.currentTarget.getAttribute("data-id")
+    ).payload[0][0];
+    markerData.openWindow = true;
+    // markerData = {position, imgUrl, funFacts, locName}
+    this.props.createMarker(markerData);
   };
 
   componentDidMount() {
@@ -60,6 +74,12 @@ class App extends Component {
     });
   };
 
+  handleDeleteViewedTitles = title => {
+    this.props
+      .deleteViewedTitles(title)
+      .then(() => store.dispatch(getViewedTitles()));
+  };
+
   handleModalClose = () => {
     this.setState({ modalOpen: false });
   };
@@ -76,6 +96,7 @@ class App extends Component {
     //Part of the onboarding process.
     this.handleOnSelect("Invasion of the Body Snatchers");
   };
+  handleErrorMessage = errorMessage => this.setState({ errorMessage });
 
   getModalStyle() {
     const top = 50;
@@ -97,13 +118,24 @@ class App extends Component {
     const {
       deleteMarkers,
       fetchByTitle,
-      clearMovieAC,
-      getViewedTitles
+      getViewedTitles,
+      clearGooglePlaceResults,
+      zeroCounters
     } = this.props;
+
+    deleteMarkers();
+    zeroCounters();
+    clearGooglePlaceResults();
+    this.props.toggleIsGettingGooglePlaceResults(true);
+    this.handleDrawerOpen();
 
     fetchByTitle(title)
       //returns data from either server or indexDB
       .then(results => {
+        if (results.payload.data.length === 0) {
+          throw "no data";
+        }
+        // Build request object used to get data from google maps
         const request = results.payload.data.map(loc => {
           return {
             request: {
@@ -115,39 +147,57 @@ class App extends Component {
         });
 
         request.dataSource = results.payload.dataSource;
-        return request;
-      })
-      .then(request => {
-        this.props.toggleIsGettingGooglePlaceResults(true);
-        return request;
-      })
-      .then(requestObject => {
-        clearMovieAC();
 
-        if (requestObject && requestObject.length > 0) {
-          this.handleDrawerOpen();
+        if (request.dataSource === "db") {
+          // this.props.getLocDataReqManager(request);
+          const MAP_GET_LOC_DATA_IN_BG = "MAP_GET_LOC_DATA_IN_BG";
+          const requestArray = Object.keys(request);
+
+          requestArray.pop();
+          // todo write an action for this
+          requestArray.forEach(value => {
+            store.dispatch({
+              type: MAP_GET_LOC_DATA_IN_BG,
+              payload: {
+                id: request[value].locationDetails[":id"]
+                  ? request[value].locationDetails[":id"]
+                  : request[value].locationDetails.id,
+                status: "OK",
+                places: request[value].locationDetails.places
+                  ? [request[value].locationDetails.places]
+                  : null,
+                funFacts: request[value].locationDetails.fun_facts,
+                dataSource: "db"
+              }
+            });
+          });
+          // mapPlaces copies the data from an accumulating object to a rendering object
+          // to reduce the number of renders as the data is returned from google.
+          this.props.mapPlaces();
+          return request;
         }
-        this.props.getLocDataReqManager(requestObject);
+
+        //todo create an action that moves all of
+        if (request.dataSource === "server") {
+          this.props.getLocDataReqManager(request);
+        }
+        return request;
       })
-      .then(() => {
+
+      .then(request => {
         getViewedTitles();
       })
-      .catch(err =>
-        console.error(`An error occured when looking up movie info`, err)
-      )
-      .finally(() => {
-        deleteMarkers();
+      .catch(err => {
+        if (err === "no data") {
+          this.handleErrorMessage(
+            "Sorry, no location data available for that title."
+          );
+        }
+        console.error(`An error occured when looking up movie info`, err);
       });
   };
   render() {
-    const {
-      deleteMarkers,
-      clearMarkers,
-      showMarkers,
-      isGettingGooglePlaceResults,
-      getLocationData,
-      showAllLocations
-    } = this.props;
+    const { isGettingGooglePlaceResults } = this.props;
 
     return (
       <div className="App">
@@ -157,6 +207,7 @@ class App extends Component {
             .filter(item => item.includes("showSFMOverlay=false")).length && (
             <OnboardOverlay handleOverlayClose={this.handleOverlayClose} />
           )}
+        {/* conditionally show Modal */}
         <Modal
           aria-labelledby="simple-modal-title"
           aria-describedby="simple-modal-description"
@@ -168,6 +219,7 @@ class App extends Component {
             <img src={this.state.photoUrl} style={{ maxWidth: 1400 }} alt="" />
           </div>
         </Modal>
+        <div>{this.state.errorMessage}</div>
         <SearchBar
           handleDrawerClose={this.handleDrawerClose}
           handleDrawerOpen={this.handleDrawerOpen}
@@ -184,12 +236,13 @@ class App extends Component {
             deleteMarkers={deleteMarkers}
             clearMarkers={clearMarkers}
             showMarkers={showMarkers}
-            getLocationData={getLocationData}
-            showAllLocations={showAllLocations}
+            handleShowAll={this.handleShowAll}
             isGettingGooglePlaceResults={isGettingGooglePlaceResults}
             handleOnSelect={this.handleOnSelect}
             handleModalOpen={this.handleModalOpen}
             handleModalClose={this.handleModalClose}
+            handleLocationClick={this.handleLocationClick}
+            handleDeleteViewedTitles={this.handleDeleteViewedTitles}
           />
           <MainMap id="myMap" initMap={initMap} />
         </main>
@@ -208,7 +261,6 @@ App.propTypes = {
   clearMarkers: PropTypes.func,
   showMarkers: PropTypes.func,
   isGettingGooglePlaceResults: PropTypes.bool,
-  getLocationData: PropTypes.func,
   showAllLocations: PropTypes.func
 };
 
@@ -220,24 +272,22 @@ function mapStateToProps(state) {
 export default connect(
   mapStateToProps,
   {
-    fetchMovieAC,
-    fetchMovieByRow,
-    fetchMovieAll,
-    clearMovieHistory,
     clearMovieAC,
     initMap,
-    setMapOnAll,
     clearMarkers,
     showMarkers,
     deleteMarkers,
     fetchByTitle,
-    getLocationDataInBackground,
     clearGooglePlaceResults,
     toggleIsGettingGooglePlaceResults,
-    getLocationData,
     showAllLocations,
     setOnboardingCookie,
     getViewedTitles,
-    getLocDataReqManager
+    getLocDataReqManager,
+    createMarker,
+    getLocationData,
+    mapPlaces,
+    zeroCounters,
+    deleteViewedTitles
   }
 )(App);
