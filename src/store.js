@@ -7,7 +7,8 @@ const composeEnhancers =
     window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({
       trace: true,
       traceLimit: 25,
-      latency: 0
+      latency: 0,
+      maxAge: 100
     })) ||
   compose;
 const store = createStore(
