@@ -6,23 +6,11 @@ import Footer from "./footer";
 import MarkerControls from "./markerControls";
 import MovieInfo from "./movieInfo";
 import DrawerHead from "./drawerHeader";
-import {
-  Typography,
-  Divider,
-  IconButton,
-  Drawer,
-  withStyles
-} from "@material-ui/core/";
-
-import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
-import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import { Divider, Drawer, withStyles } from "@material-ui/core/";
 
 const drawerWidth = "25%";
 
 const styles = theme => ({
-  grow: {
-    flexGrow: 1
-  },
   drawer: {
     width: drawerWidth,
     flexShrink: 0
@@ -30,15 +18,8 @@ const styles = theme => ({
   drawerPaper: {
     width: drawerWidth
   },
-  drawerHeader: {
-    display: "flex",
-    alignItems: "flex-start",
-    padding: "0 8px",
-    ...theme.mixins.toolbar,
-    justifyContent: "flex-start"
-  },
   movieInfo: {
-    padding: "11px 16px 11px 16px"
+    padding: "11px 36px 11px 16px"
   }
 });
 
