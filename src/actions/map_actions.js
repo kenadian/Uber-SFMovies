@@ -1,4 +1,3 @@
-import React from "react";
 import store from "../store";
 
 import { makeInfoWindowContent } from "../functions/map";
@@ -22,8 +21,8 @@ export const MAP_GET_LOC_DATA_FROM_IDB = "MAP_GET_LOC_DATA_FROM_IDB";
 export const MAP_CLOSE_ALL_INFO_WINDOWS = "MAP_CLOSE_ALL_INFO_WINDOWS";
 
 let movieMap, placesService;
-let markers = [];
 let sanFrancisco = { lat: 37.7749295, lng: -122.4364155 };
+
 /**
  * @description Calculates a value for zoom based on innerWidth
  *
@@ -76,9 +75,10 @@ export function initMap() {
       style: window.google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
       position: window.google.maps.ControlPosition.BOTTOM_CENTER
     },
-    center: sanFrancisco
+    center: sanFrancisco,
+    markers: []
   });
-  window.google.maps.event.addDomListener(window, "resize", initMap);
+  // window.google.maps.event.addDomListener(window, "resize", initMap);
   return {
     type: MAP_INIT
   };
@@ -182,6 +182,7 @@ export function getLocationDataInBackground(movieLocation) {
 }
 
 export function showAllLocations() {
+  deleteMarkers();
   //Todo make function composable
   //return array of values that have been sucessfully plotted
   store.getState().maps.googlePlaceResults.map(result => {
@@ -209,12 +210,12 @@ export function showAllLocations() {
         position: result.places[0].geometry.location,
         imgUrl,
         funFacts: result.funFacts,
-        locName: result.places[0].name
+        locName: result.places[0].name,
+        openWindow: false
       })
     );
     return true;
   });
-
   movieMap.setCenter(sanFrancisco);
   movieMap.setZoom(calculateZoom());
 
@@ -239,39 +240,34 @@ export function createMarker(markerData) {
     openWindow = false
   } = markerData;
 
-  // build an array to use for comparing current marker location name to locations already plotted
-  const markersLocNames = markers.map(value => {
+  let marker = [];
+  // markersLocNames used for comparing current marker location name to locations already plotted
+  //savedMarkers
+  const markersLocNames = movieMap.markers.map(value => {
     return value.locName;
   });
 
   // build the marker and save it to the markers array if this is the first marker plotted
   // or the marker hasn't been plotted before
-  if (!markersLocNames.includes(locName) || markers.length === 0) {
-    const marker = new window.google.maps.Marker({
+  if (!markersLocNames.includes(locName) || movieMap.markers.length === 0) {
+    marker = new window.google.maps.Marker({
       map: movieMap,
       position,
       locName
     });
-    const infoWindowContent = makeInfoWindowContent(imgUrl, funFacts, locName); //builds html for infoWindow
-    const infoWindow = new window.google.maps.InfoWindow({ maxWidth: 300 });
-    // display the info window if markerData.openWindow:true
-    if (openWindow) {
-      infoWindow.setContent(infoWindowContent);
-      infoWindow.open(movieMap, marker);
-    }
-    // closes all info windows when the map is clicked
-    // this augments the default window close behaviour, click on the 'x'
-    window.google.maps.event.addListener(movieMap, "click", function() {
-      infoWindow.close();
-    });
-    // opens info window when marker is clicked
-    window.google.maps.event.addListener(marker, "click", function() {
-      infoWindow.setContent(infoWindowContent);
-      infoWindow.open(movieMap, marker);
-    });
-    // adds the marker to the markers array.
-    // used by hide, show, delete widgets
-    markers.push(marker);
+  }
+
+  if (markersLocNames.includes(locName)) {
+    marker = movieMap.markers.filter(markerData => {
+      return markerData.locName === locName;
+    })[0];
+  }
+
+  infoWindow(imgUrl, funFacts, locName, openWindow, marker);
+
+  // used by hide, show, delete widgets
+  if (!markersLocNames.includes(locName) || movieMap.markers.length === 0) {
+    movieMap.markers.push(marker);
   }
 
   movieMap.setCenter(position);
@@ -301,8 +297,9 @@ export function getLocationData(locName, locationID) {
         return {
           position: results.geometry.location,
           imgUrl,
-          fun_facts: loc.fun_facts,
-          locName
+          funFacts: loc.funFacts,
+          locName,
+          openWindow: true
         };
       });
     });
@@ -310,10 +307,11 @@ export function getLocationData(locName, locationID) {
   return { type: MAP_GET_LOCATION_DATA, payload: markerData };
 }
 
-export function setMapOnAll(movieMap) {
-  for (var i = 0; i < markers.length; i++) {
-    markers[i].setMap(movieMap);
+export function setMapOnAll(theMap) {
+  for (var i = 0; i < movieMap.markers.length; i++) {
+    movieMap.markers[i].setMap(theMap);
   }
+
   return {
     type: MAP_SET_MAP_ON_ALL
   };
@@ -338,8 +336,41 @@ export function showMarkers() {
 // Deletes all markers in the array by removing references to them.
 export function deleteMarkers() {
   store.dispatch(clearMarkers());
-  markers = [];
+  movieMap.markers = [];
   return {
     type: MAP_DELETE_MARKERS
   };
 }
+const infoWindow = (
+  imgUrl,
+  funFacts,
+  locName,
+  openWindow,
+  marker,
+  drawerOpen
+) => {
+  const infoWindowContent = makeInfoWindowContent({
+    imgUrl,
+    width: "250px",
+    // height: '',
+    funFacts,
+    locName
+  }); //builds html for infoWindow
+
+  const infoWindow = new window.google.maps.InfoWindow({ maxWidth: 300 });
+  // display the info window if markerData.openWindow:true
+  if (openWindow) {
+    infoWindow.setContent(infoWindowContent);
+    infoWindow.open(movieMap, marker);
+  }
+  // closes all info windows when the map is clicked
+  // this augments the default window close behaviour, click on the 'x'
+  window.google.maps.event.addListener(movieMap, "click", function() {
+    infoWindow.close();
+  });
+  // opens info window when marker is clicked
+  window.google.maps.event.addListener(marker, "click", function() {
+    infoWindow.setContent(infoWindowContent);
+    infoWindow.open(movieMap, marker);
+  });
+};
