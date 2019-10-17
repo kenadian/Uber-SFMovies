@@ -17,7 +17,7 @@ export const MOVIE_DELETE_VIEWED_TITLES = "MOVIE_DELETE_VIEWED_TITLES";
 
 export function fetchMovieAC(term) {
   const query = encodeURIComponent(
-    `SELECT distinct title WHERE lower(title) like "%${term}%" and locations IS NOT NULL`
+    `SELECT distinct title WHERE lower(title) like "%${term.toLowerCase()}%" and locations IS NOT NULL`
   );
   // endpoint for san francisco movie data
   const url = `https://data.sfgov.org/resource/wwmu-gmzc.json?$query=${query}`;
