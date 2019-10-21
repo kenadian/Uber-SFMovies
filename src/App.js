@@ -245,8 +245,7 @@ class App extends Component {
         {this.state.showOverlay &&
           !document.cookie
             .split(";")
-            .filter(item => item.includes("showSFMOverlay=false")).length &&
-          this.props.getViewedTitles().length > 0 && (
+            .filter(item => item.includes("showSFMOverlay=false")).length && (
             <OnboardOverlay handleOverlayClose={this.handleOverlayClose} />
           )}
         {/* conditionally show Modal */}
