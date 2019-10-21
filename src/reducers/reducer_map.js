@@ -15,21 +15,29 @@ import {
   MAP_SET_ONBOARD_COOKIE,
   MAP_PLACES,
   MAP_GET_LOC_DATA_FROM_IDB,
-  MAP_CLOSE_ALL_INFO_WINDOWS
+  MAP_CLOSE_ALL_INFO_WINDOWS,
+  MAP_CLOSE_INFO_WINDOW,
+  MAP_SET_MAP_ON_ONE,
+  MAP_GET_MARKER,
+  MAP_HAS_WINDOW
 } from "../actions/map_actions";
 
 let initialState = {
-  locations: [],
+  // locations: [],
   googlePlaceResults: [],
   googlePlaceResults1: [],
   isGettingGooglePlaceResults: false,
-  processingLocations: false,
-  googlePlaceZeroResults: [],
-  zeroResults: false
+  googlePlaceZeroResults: []
 };
 
 export default function(state = initialState, action) {
   switch (action.type) {
+    case MAP_HAS_WINDOW:
+      return { ...state };
+    case MAP_GET_MARKER:
+      return { ...state };
+    case MAP_CLOSE_INFO_WINDOW:
+      return { ...state };
     case MAP_CLOSE_ALL_INFO_WINDOWS:
       return { ...state };
     case MAP_SET_ONBOARD_COOKIE:
@@ -39,6 +47,8 @@ export default function(state = initialState, action) {
     case MAP_CREATE_MARKER:
       return { ...state };
     case MAP_GET_LOCATION_DATA:
+      return { ...state };
+    case MAP_SET_MAP_ON_ONE:
       return { ...state };
     case MAP_SET_MAP_ON_ALL:
       return { ...state };
@@ -63,6 +73,7 @@ export default function(state = initialState, action) {
           const store = db
             .transaction("locations", "readwrite")
             .objectStore("locations");
+
           let value = await store.get(action.payload.id).then(result => result);
 
           if (action.payload.status === "OK") {
@@ -70,8 +81,7 @@ export default function(state = initialState, action) {
             value.places = JSON.parse(JSON.stringify(action.payload.places[0]));
             // check if there is a photo and store the Url
             if (action.payload.places[0].hasOwnProperty("photos")) {
-              //TODO to get all the photos map through action.payload.places[0].photos
-              // and getUrl()
+              //NOTE to get all the photos map through action.payload.places[0].photos and getUrl()
 
               value.places.photos[0].Url = action.payload.places[0].photos[0].getUrl();
             }
@@ -88,6 +98,7 @@ export default function(state = initialState, action) {
         action.payload.status !== "undefined" &&
         action.payload.status === "OK"
       ) {
+        // Google gave us something good.
         googlePlaceResults1.push(action.payload);
 
         return {
@@ -95,12 +106,13 @@ export default function(state = initialState, action) {
           googlePlaceResults1
         };
       }
+
       if (
         action.payload.status !== "undefined" &&
         action.payload.status === "ZERO_RESULTS"
       ) {
+        // Google gave us something. Useful to indicate no result but still a location.
         googlePlaceResults1.places = null;
-
         googlePlaceResults1.push(action.payload);
         return {
           ...state,
