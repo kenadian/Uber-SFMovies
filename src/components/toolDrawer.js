@@ -57,6 +57,7 @@ class ToolDrawer extends PureComponent {
           handleLocationClick={this.props.handleLocationClick}
           handleModalOpen={this.props.handleModalOpen}
           handleCloseAllInfoWindows={this.props.handleCloseAllInfoWindows}
+          handleInfoWindowClick={this.props.handleInfoWindowClick}
           theme={theme}
           classes={classes}
           googlePlaceResults={this.props.googlePlaceResults}
