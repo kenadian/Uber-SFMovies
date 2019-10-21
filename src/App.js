@@ -8,10 +8,9 @@ import OnboardOverlay from "./components/onboardOverlay";
 import { Modal } from "@material-ui/core/";
 import store from "./store";
 import {
-  fetchByTitle,
+  fetchMovieByTitle,
   clearMovieAC,
   getViewedTitles,
-  filterDuplicateLocations,
   deleteViewedTitles
 } from "./actions/movie_actions";
 
@@ -26,7 +25,12 @@ import {
   setOnboardingCookie,
   getLocationData,
   createMarker,
-  mapPlaces
+  mapPlaces,
+  closeInfoWindow,
+  openInfoWindow,
+  setMapOnOne,
+  hasWindow,
+  getMarker
 } from "./actions/map_actions";
 
 import { getLocDataReqManager, zeroCounters } from "./actions/location_actions";
@@ -42,16 +46,54 @@ class App extends Component {
   handleShowAll = () => {
     this.props.showAllLocations();
   };
+  handleInfoWindowClick = event => {
+    const locId = event.currentTarget.getAttribute("data-id");
+    const hasWindow = this.props.hasWindow(locId).payload;
+    if (hasWindow) {
+      this.props.closeInfoWindow(locId);
+      return { result: "exists" };
+    }
+    if (!hasWindow) {
+      // if (this.props.getMarker(locId).payload.length > 0) {
+      this.props.openInfoWindow(locId);
+      // }
+      return { result: "new" };
+    }
+
+    // getLocationData can return multiple locations as an array
+    // Only will return the location that was clicked so I explicitly get that array element [0][0]
+    // markerData = {position, imgUrl, funFacts, locName, openWindow}
+    // let markerData = this.props.getLocationData(
+    //   event.currentTarget.getAttribute("value"),
+    //   locId
+    // ).payload[0][0];
+    // markerData = { ...markerData, openWindow: true, locId };
+
+    // this.props.createMarker(markerData);
+    return { result: "added" };
+    // this.handleDrawerClose();
+  };
+
   handleLocationClick = event => {
+    const active = event.currentTarget.getAttribute("data-active");
+    const locId = event.currentTarget.getAttribute("data-id");
+    if (active === "true") {
+      this.props.setMapOnOne(locId);
+      return { result: "exists" };
+    }
+
     // getLocationData can return multiple locations as an array
     // Only will return the location that was clicked so I explicitly get that array element [0][0]
     let markerData = this.props.getLocationData(
       event.currentTarget.getAttribute("value"),
-      event.currentTarget.getAttribute("data-id")
+      locId
     ).payload[0][0];
-    markerData.openWindow = true;
-    // markerData = {position, imgUrl, funFacts, locName}
+    markerData = { ...markerData, openWindow: true, locId };
+    // markerData = {position, imgUrl, funFacts, locName, openWindow}
+
     this.props.createMarker(markerData);
+    return { result: "added" };
+    // this.handleDrawerClose();
   };
 
   componentDidMount() {
@@ -117,7 +159,7 @@ class App extends Component {
   handleOnSelect = title => {
     const {
       deleteMarkers,
-      fetchByTitle,
+      fetchMovieByTitle,
       getViewedTitles,
       clearGooglePlaceResults,
       zeroCounters
@@ -129,11 +171,11 @@ class App extends Component {
     this.props.toggleIsGettingGooglePlaceResults(true);
     this.handleDrawerOpen();
 
-    fetchByTitle(title)
+    fetchMovieByTitle(title)
       //returns data from either server or indexDB
       .then(results => {
         if (results.payload.data.length === 0) {
-          throw "no data";
+          throw new Error("no data");
         }
         // Build request object used to get data from google maps
         const request = results.payload.data.map(loc => {
@@ -204,7 +246,8 @@ class App extends Component {
         {this.state.showOverlay &&
           !document.cookie
             .split(";")
-            .filter(item => item.includes("showSFMOverlay=false")).length && (
+            .filter(item => item.includes("showSFMOverlay=false")).length &&
+          this.props.getViewedTitles().length > 0 && (
             <OnboardOverlay handleOverlayClose={this.handleOverlayClose} />
           )}
         {/* conditionally show Modal */}
@@ -243,8 +286,9 @@ class App extends Component {
             handleModalClose={this.handleModalClose}
             handleLocationClick={this.handleLocationClick}
             handleDeleteViewedTitles={this.handleDeleteViewedTitles}
+            handleInfoWindowClick={this.handleInfoWindowClick}
           />
-          <MainMap id="myMap" initMap={initMap} />
+          <MainMap id="movieMap" initMap={initMap} />
         </main>
       </div>
     );
@@ -252,7 +296,7 @@ class App extends Component {
 }
 App.propTypes = {
   setOnboardingCookie: PropTypes.func,
-  fetchByTitle: PropTypes.func,
+  fetchMovieByTitle: PropTypes.func,
   clearMovieAC: PropTypes.func,
   getViewedTitles: PropTypes.func,
   toggleIsGettingGooglePlaceResults: PropTypes.func,
@@ -261,7 +305,12 @@ App.propTypes = {
   clearMarkers: PropTypes.func,
   showMarkers: PropTypes.func,
   isGettingGooglePlaceResults: PropTypes.bool,
-  showAllLocations: PropTypes.func
+  showAllLocations: PropTypes.func,
+  closeInfoWindow: PropTypes.func,
+  openInfoWindow: PropTypes.func,
+  setMapOnOne: PropTypes.func,
+  hasWindow: PropTypes.func,
+  getMarker: PropTypes.func
 };
 
 function mapStateToProps(state) {
@@ -277,7 +326,7 @@ export default connect(
     clearMarkers,
     showMarkers,
     deleteMarkers,
-    fetchByTitle,
+    fetchMovieByTitle,
     clearGooglePlaceResults,
     toggleIsGettingGooglePlaceResults,
     showAllLocations,
@@ -288,6 +337,11 @@ export default connect(
     getLocationData,
     mapPlaces,
     zeroCounters,
-    deleteViewedTitles
+    deleteViewedTitles,
+    closeInfoWindow,
+    openInfoWindow,
+    setMapOnOne,
+    hasWindow,
+    getMarker
   }
 )(App);
