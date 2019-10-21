@@ -25,6 +25,8 @@ class LocationDetail extends PureComponent {
     } = this.props;
     const handleLocationClick = this.handleLocationClick;
     const handleInfoWindowClick = this.handleInfoWindowClick;
+    // TODO add a crosshairs icon that centers the location on click
+    // TODO develop place icon click behaviour to center marker and open window if window is closed and marker is placed
 
     return (
       <React.Fragment>
