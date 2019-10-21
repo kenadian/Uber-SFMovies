@@ -8,17 +8,77 @@ import {
   MOVIE_GET_VIEWED_TITLES,
   MOVIE_DELETE_VIEWED_TITLES
 } from "../actions/movie_actions";
+import {
+  MAP_CREATE_MARKER,
+  MAP_CLEAR_MARKERS,
+  MAP_CLOSE_INFO_WINDOW,
+  MAP_OPEN_INFO_WINDOW,
+  MAP_SET_MAP_ON_ONE,
+  MAP_SHOW_ALL_LOCATIONS,
+  MAP_CLOSE_ALL_INFO_WINDOWS
+} from "../actions/map_actions";
 
 let initialState = {
   searchResults: [],
   viewedTitles: [],
   locations: [],
+  markers: [],
+  markerWindows: [],
   movieDetails: {}
 };
 
 export default function(state = initialState, action) {
-  //
+  //TODO move the markers to maps unless that doesn't work
   switch (action.type) {
+    case MAP_CLOSE_ALL_INFO_WINDOWS:
+      return {
+        ...state,
+        markerWindows: []
+      };
+
+    case MAP_SHOW_ALL_LOCATIONS:
+      return {
+        ...state,
+        markerWindows: []
+      };
+    case MAP_SET_MAP_ON_ONE:
+      const markers = state.markers.filter(value => value !== action.payload);
+
+      const newMarkerWindow = state.markerWindows.filter(
+        value => value !== action.payload
+      );
+
+      return { ...state, markers, markerWindows: newMarkerWindow };
+
+    case MAP_OPEN_INFO_WINDOW:
+      const tempMarkerWindows = state.markerWindows.slice();
+      tempMarkerWindows.push(action.payload[0]);
+
+      return { ...state, markerWindows: tempMarkerWindows };
+    case MAP_CLOSE_INFO_WINDOW:
+      const markerWindows = state.markerWindows.filter(
+        markerWindow => markerWindow !== action.payload[0]
+      );
+      return {
+        ...state,
+        markerWindows: markerWindows
+      };
+    case MAP_CLEAR_MARKERS:
+      return { ...state, markers: [], markerWindows: [] };
+    case MAP_CREATE_MARKER:
+      const markedLocations = state.locations.filter(loc => {
+        return (
+          action.payload.filter(id => {
+            return loc.id === id;
+          }).length === 1
+        );
+      });
+
+      return {
+        ...state,
+        markers: markedLocations.map(loc => loc.id),
+        markerWindows: [...state.markerWindows, action.locId]
+      };
     case MOVIE_DELETE_VIEWED_TITLES:
       return { ...state, viewedTitles: action.payload };
     case MOVIE_GET_VIEWED_TITLES:
@@ -45,7 +105,11 @@ export default function(state = initialState, action) {
 
       if (action.payload.hasOwnProperty("config")) {
         // data comes from server
-        payloadLocation = action.payload.data;
+
+        payloadLocation = action.payload.data.map(location => {
+          location.id = location[":id"];
+          return location;
+        });
       }
 
       if (!action.payload.hasOwnProperty("config")) {
