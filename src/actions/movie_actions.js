@@ -1,5 +1,4 @@
 import axios from "axios";
-import store from "../store";
 import {
   openMoviesIDB,
   getMovieFromIDB,
@@ -63,7 +62,7 @@ export async function deleteViewedTitles(title) {
 
   return { type: MOVIE_DELETE_VIEWED_TITLES, payload: results };
 }
-export async function fetchByTitle(term) {
+export async function fetchMovieByTitle(term) {
   return getMovieFromIDB(term).then(result => {
     // If we get results from indexedDb it saves us going to the server.
     // Movie data isn't expected to change
