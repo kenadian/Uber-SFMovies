@@ -196,7 +196,7 @@ class App extends Component {
           const requestArray = Object.keys(request);
 
           requestArray.pop();
-          // todo write an action for this
+          // TODO write an action for this
           requestArray.forEach(value => {
             store.dispatch({
               type: MAP_GET_LOC_DATA_IN_BG,
@@ -219,7 +219,6 @@ class App extends Component {
           return request;
         }
 
-        //todo create an action that moves all of
         if (request.dataSource === "server") {
           this.props.getLocDataReqManager(request);
         }
