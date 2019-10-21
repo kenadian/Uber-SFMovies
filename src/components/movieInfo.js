@@ -12,14 +12,17 @@ class MovieInfo extends PureComponent {
       classes,
       movieDetails,
       isGettingGooglePlaceResults,
-      movieLocations,
+      locations,
       handleShowAll,
       handleLocationClick,
+      handleInfoWindowClick,
       handleModalOpen,
       googlePlaceResults,
       progressCounter,
       locationCount,
-      handleCloseAllInfoWindows
+      handleCloseAllInfoWindows,
+      markers,
+      markerWindows
     } = this.props;
 
     return (
@@ -43,13 +46,27 @@ class MovieInfo extends PureComponent {
 
             {!isGettingGooglePlaceResults &&
               googlePlaceResults.length > 0 &&
-              movieLocations &&
-              movieLocations.map((loc, index) => {
+              locations &&
+              locations.map((loc, index) => {
                 const { hasPlace, hasPhoto, photoUrl } = getPlaceAndPhoto(
                   googlePlaceResults,
                   loc
                 );
 
+                const hasMarker = markers.includes(loc.id)
+                  ? { color: "red", active: true }
+                  : { color: "#3f51b5", active: false };
+
+                // test  marker.infoWindowForMarker.anchor to tell if the window has been closed
+                const hasMarkerWindow = markerWindows.includes(loc.id)
+                  ? { color: "red", active: true }
+                  : { color: "#3f51b5", active: false };
+
+                /*
+                  TODO 
+                  Access the full screen modal display from the marker window by clicking the image.
+                 No Image, no click.
+                  */
                 return (
                   <LocationDetail
                     key={index}
@@ -60,7 +77,10 @@ class MovieInfo extends PureComponent {
                     hasPlace={hasPlace}
                     hasPhoto={hasPhoto}
                     photoUrl={photoUrl}
+                    hasMarker={hasMarker}
+                    hasMarkerWindow={hasMarkerWindow}
                     handleLocationClick={handleLocationClick}
+                    handleInfoWindowClick={handleInfoWindowClick}
                     handleModalOpen={handleModalOpen}
                   />
                 );
@@ -97,7 +117,7 @@ function getPlaceAndPhoto(googlePlaceResults, loc) {
     return false;
   });
 
-  let photoUrl;
+  let photoUrl = null;
   // Need to figure out if the url for the location photo has been built already
   // if it hasn't call the getUrl method, otherwise use the stored Url
   // TODO handle stale photo links
@@ -130,8 +150,9 @@ MovieInfo.propTypes = {
   classes: PropTypes.object,
   movieDetails: PropTypes.object,
 
-  movieLocations: PropTypes.array,
+  locations: PropTypes.array,
   googlePlaceResults: PropTypes.array,
+  markers: PropTypes.array,
 
   progressCounter: PropTypes.number,
   locationCount: PropTypes.number
@@ -140,9 +161,11 @@ MovieInfo.propTypes = {
 function mapStateToProps(state) {
   return {
     googlePlaceResults: state.maps.googlePlaceResults,
-    movieLocations: state.movies.locations,
+    locations: state.movies.locations,
     progressCounter: state.location.progressCounter,
-    locationCount: state.location.locationCount
+    locationCount: state.location.locationCount,
+    markers: state.movies.markers,
+    markerWindows: state.movies.markerWindows
   };
 }
 export default connect(
