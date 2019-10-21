@@ -5,17 +5,27 @@ import { PropTypes } from "prop-types";
 import Photo from "@material-ui/icons/Photo";
 import Place from "@material-ui/icons/Place";
 class LocationDetail extends PureComponent {
+  handleLocationClick = event => {
+    this.props.handleLocationClick(event);
+  };
+  handleInfoWindowClick = event => {
+    this.props.handleInfoWindowClick(event);
+  };
   render() {
     const {
       loc,
       classes,
       index,
-      handleLocationClick,
       handleModalOpen,
       hasPhoto,
       hasPlace,
-      photoUrl
+      photoUrl,
+      hasMarker,
+      hasMarkerWindow
     } = this.props;
+    const handleLocationClick = this.handleLocationClick;
+    const handleInfoWindowClick = this.handleInfoWindowClick;
+
     return (
       <React.Fragment>
         {hasPlace.length > 0 && (
@@ -33,6 +43,7 @@ class LocationDetail extends PureComponent {
                   onClick={handleLocationClick}
                   value={loc.locations}
                   data-id={loc[":id"]}
+                  data-active={hasMarker.active}
                 >
                   {loc.locations}
                 </Link>
@@ -41,26 +52,30 @@ class LocationDetail extends PureComponent {
             <Grid item>
               <Grid container alignItems="center">
                 <Grid item>
-                  <Link
+                  <Place
                     key={loc[":id"]}
                     className={classes.link}
                     onClick={handleLocationClick}
                     value={loc.locations}
                     data-id={loc[":id"]}
-                  >
-                    <Place />
-                  </Link>
+                    data-active={hasMarker.active}
+                    style={{ color: hasMarker.color }}
+                  />
                 </Grid>
 
                 <Grid>
                   {hasPhoto.length > 0 ? (
-                    <Link
+                    <Photo
                       target="blank"
-                      onClick={handleModalOpen}
+                      value={loc.locations}
+                      data-id={loc[":id"]}
+                      onClick={handleInfoWindowClick}
+                      data-active={hasMarkerWindow.active}
+                      // onClick={handleModalOpen}
                       photourl={photoUrl}
-                    >
-                      <Photo />
-                    </Link>
+                      // disabled={!hasMarker.active}
+                      style={{ color: hasMarkerWindow.color }}
+                    />
                   ) : (
                     <div style={{ width: 24 }}>
                       <Photo style={{ color: "#e0e0e0" }} />
@@ -96,9 +111,7 @@ class LocationDetail extends PureComponent {
                 </Grid>
 
                 <Grid style={{ width: 24 }}>
-                  {/* <div style={{ width: 24 }}> */}
                   <Photo style={{ color: "#e0e0e0" }} />
-                  {/* </div> */}
                 </Grid>
               </Grid>
             </Grid>
