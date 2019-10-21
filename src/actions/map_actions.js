@@ -189,7 +189,7 @@ export function getLocationDataInBackground(movieLocation) {
     // Check if the places property has been set indicating the data has been retrieved from indexeddb
     // and can be resolved without querying google
 
-    // todo remove the check for "places". Perform check in App.js
+    // TODO remove the check for "places". Perform check in App.js
     if (movieLocation.locationDetails.hasOwnProperty("places")) {
       resolve({
         id: movieLocation.locationDetails[":id"]
@@ -280,7 +280,7 @@ export function showAllLocations() {
 
     // use the dataSource flag to choose which property
     // to use for the image url, if one exists.
-    // todo the errors are from not filtering the googlePlacesData
+    // TODO the errors are from not filtering the googlePlacesData
     if (result.dataSource === "server") {
       imgUrl = result.places[0].hasOwnProperty("photos")
         ? result.places[0].photos[0].getUrl()
