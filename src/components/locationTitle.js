@@ -25,7 +25,7 @@ class LocationTitle extends Component {
         {!this.props.isGettingGooglePlaceResults
           ? `${this.props.movieLocationsLength} Locations   ` //extra space is necessary
           : null}
-        {/* todo the showall button should be disabled if their is no location data to show */}
+        {/* TODO the showall button should be disabled if their is no location data to show */}
         {!this.props.isGettingGooglePlaceResults && (
           <Link onClick={this.props.handleShowAll}>Show All</Link>
         )}
