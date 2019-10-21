@@ -22,7 +22,7 @@ import SearchIcon from "@material-ui/icons/Search";
 
 import {
   fetchMovieAC,
-  fetchByTitle,
+  fetchMovieByTitle,
   clearMovieAC
 } from "../actions/movie_actions";
 
@@ -236,7 +236,7 @@ class SearchBar extends Component {
 SearchBar.propTypes = {
   handleDrawerOpen: PropTypes.func,
   fetchMovieAC: PropTypes.func,
-  fetchByTitle: PropTypes.func,
+  fetchMovieByTitle: PropTypes.func,
   clearMovieAC: PropTypes.func,
   lookupLocation: PropTypes.func,
   createMarkers: PropTypes.func,
@@ -259,7 +259,7 @@ export default withStyles(styles, { withTheme: true })(
     mapStateToProps,
     {
       fetchMovieAC,
-      fetchByTitle,
+      fetchMovieByTitle,
       clearMovieAC
     }
   )(SearchBar)
