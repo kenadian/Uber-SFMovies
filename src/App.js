@@ -61,18 +61,22 @@ class App extends Component {
     //TODO give state.open a new name
     open: false,
     drawerOpen: false,
-    showOverlay: true,
-    startSearch: null,
+    showOverlay:
+      document.cookie
+        .split(";")
+        .filter(item => item.includes("showSFMOverlay=false")).length > 0
+        ? false
+        : true,
     modalOpen: false,
     errorMessage: ""
   };
+
   componentDidMount() {
     this.props.getViewedTitles();
   }
   handleShowAll = () => {
     this.props.showAllLocations();
   };
-
   handleInfoWindowClick = event => {
     const locId = event.currentTarget.getAttribute("data-id");
     const hasWindow = this.props.hasWindow(locId).payload;
@@ -140,18 +144,24 @@ class App extends Component {
     this.setState({ modalOpen: false });
   };
 
-  handleOverlayClose = () => {
-    this.props.setOnboardingCookie();
+  handleOverlayClose = event => {
+    let forever = null;
+    if (event.currentTarget.attributes.hasOwnProperty("forever")) {
+      forever = event.currentTarget.attributes["forever"].value;
+    }
+    this.props.setOnboardingCookie(forever);
     localStorage.setItem("showSFMOverlay", false);
     this.setState({
-      showOverlay: false,
-      startSearch: "Invasion of the Body Snatchers"
+      showOverlay: false
     });
 
     //Simulate a movie selection
     //Part of the onboarding process.
-    this.handleOnSelect(this.state.startSearch);
+    if (forever === null) {
+      this.handleOnSelect("Invasion of the Body Snatchers");
+    }
   };
+
   handleErrorMessage = errorMessage => this.setState({ errorMessage });
 
   getModalStyle() {
@@ -253,18 +263,16 @@ class App extends Component {
   getWidth = () => {
     return window.innerWidth;
   };
+
   render() {
     const { isGettingGooglePlaceResults, movieDetails, zoomToSF } = this.props;
     const { drawerOpen } = this.state;
     return (
       <MuiThemeProvider theme={theme}>
         <div className="App">
-          {this.state.showOverlay &&
-            !document.cookie
-              .split(";")
-              .filter(item => item.includes("showSFMOverlay=false")).length && (
-              <OnboardOverlay handleOverlayClose={this.handleOverlayClose} />
-            )}
+          {this.state.showOverlay && (
+            <OnboardOverlay handleOverlayClose={this.handleOverlayClose} />
+          )}
           {/* conditionally show Modal */}
           <Modal
             aria-labelledby="simple-modal-title"
@@ -282,16 +290,17 @@ class App extends Component {
             </div>
           </Modal>
           <div>{this.state.errorMessage}</div>
-          <SearchBar
-            handleDrawerClose={this.handleDrawerClose}
-            handleDrawerOpen={this.handleDrawerOpen}
-            deleteMarkers={deleteMarkers}
-            open={this.state.open}
-            drawerOpen={drawerOpen}
-            startSearch={this.state.startSearch}
-            handleOnSelect={this.handleOnSelect}
-            isGettingGooglePlaceResults={isGettingGooglePlaceResults}
-          />
+          {!this.state.showOverlay && (
+            <SearchBar
+              handleDrawerClose={this.handleDrawerClose}
+              handleDrawerOpen={this.handleDrawerOpen}
+              deleteMarkers={deleteMarkers}
+              open={this.state.open}
+              drawerOpen={drawerOpen}
+              handleOnSelect={this.handleOnSelect}
+              isGettingGooglePlaceResults={isGettingGooglePlaceResults}
+            />
+          )}
           {this.getWidth() < 420 && (
             <MarkerControlsMenu
               zoomToSF={zoomToSF}

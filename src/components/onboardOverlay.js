@@ -48,11 +48,25 @@ class OnboardOverlay extends Component {
             facts, names of the director, writer, actors, and studio for most of
             these films. .
           </Typography>
-          <Typography paragraph variant="body1">
+          {/* <Typography paragraph variant="body1">
             To get started try a search for "Invasion of the Body Snatchers".
-          </Typography>
-          <Button fullWidth onClick={this.props.handleOverlayClose}>
-            Get Started
+          </Typography> */}
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={this.props.handleOverlayClose}
+          >
+            To get started try a search for "Invasion of the Body Snatchers".
+          </Button>
+
+          <Button
+            style={{ marginTop: 10 }}
+            variant="contained"
+            fullWidth
+            forever="true"
+            onClick={this.props.handleOverlayClose}
+          >
+            Don't show again.
           </Button>
         </Grid>
       </Grid>

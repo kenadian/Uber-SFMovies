@@ -144,7 +144,14 @@ export function clearGooglePlaceResults() {
   };
 }
 
-export function setOnboardingCookie() {
+export function setOnboardingCookie(forever) {
+  if (forever === "true") {
+    document.cookie =
+      "showSFMOverlay=false;expires=Fri, 31 Dec 9999 23:59:59 GMT";
+    return {
+      type: MAP_SET_ONBOARD_COOKIE
+    };
+  }
   document.cookie = "showSFMOverlay=false";
   return {
     type: MAP_SET_ONBOARD_COOKIE
