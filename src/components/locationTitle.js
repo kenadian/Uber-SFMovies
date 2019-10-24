@@ -3,10 +3,17 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { CircularProgress, Typography, Link } from "@material-ui/core/";
 class LocationTitle extends Component {
-  render() {
+  render(props) {
+    const {
+      isGettingGooglePlaceResults,
+      movieLocationsLength,
+      progressCounter,
+      handleShowAll,
+      classes
+    } = this.props;
     return (
       <Typography variant="h6">
-        {this.props.isGettingGooglePlaceResults && (
+        {isGettingGooglePlaceResults && (
           <div>
             <CircularProgress
               style={{
@@ -18,16 +25,18 @@ class LocationTitle extends Component {
               }}
             />
             {"  "}
-            {this.props.progressCounter} of {this.props.movieLocationsLength}
+            {progressCounter} of {movieLocationsLength}
           </div>
         )}
 
-        {!this.props.isGettingGooglePlaceResults
-          ? `${this.props.movieLocationsLength} Locations   ` //extra space is necessary
+        {!isGettingGooglePlaceResults
+          ? `${movieLocationsLength} Locations   ` //extra space is necessary
           : null}
         {/* TODO the showall button should be disabled if their is no location data to show */}
-        {!this.props.isGettingGooglePlaceResults && (
-          <Link onClick={this.props.handleShowAll}>Show All</Link>
+        {!isGettingGooglePlaceResults && (
+          <Link className={classes.showAll} onClick={handleShowAll}>
+            Show All
+          </Link>
         )}
       </Typography>
     );

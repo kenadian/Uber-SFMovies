@@ -3,9 +3,16 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import MainMap from "./components/map.js";
 import SearchBar from "./components/searchBar";
+import MarkerControlsMenu from "./components/markerControlsMenu";
 import ToolDrawer from "./components/toolDrawer";
 import OnboardOverlay from "./components/onboardOverlay";
 import { Modal } from "@material-ui/core/";
+import {
+  MuiThemeProvider,
+  createMuiTheme,
+  withStyles
+} from "@material-ui/core/styles";
+
 import store from "./store";
 import {
   fetchMovieByTitle,
@@ -30,53 +37,63 @@ import {
   openInfoWindow,
   setMapOnOne,
   hasWindow,
-  getMarker
+  getMarker,
+  zoomToSF
 } from "./actions/map_actions";
-
 import { getLocDataReqManager, zeroCounters } from "./actions/location_actions";
+
+let theme = createMuiTheme();
+theme = {
+  ...theme,
+  breakpoints: {
+    ...theme.breakpoints,
+    values: { ...theme.breakpoints.values, xs: 376, sm: 376 }
+  }
+};
+const styles = theme => {
+  return {
+    root: "initial"
+  };
+};
 
 class App extends Component {
   state = {
+    //TODO give state.open a new name
     open: false,
+    drawerOpen: false,
     showOverlay: true,
     startSearch: null,
     modalOpen: false,
     errorMessage: ""
   };
+  componentDidMount() {
+    this.props.getViewedTitles();
+  }
   handleShowAll = () => {
     this.props.showAllLocations();
   };
+
   handleInfoWindowClick = event => {
     const locId = event.currentTarget.getAttribute("data-id");
     const hasWindow = this.props.hasWindow(locId).payload;
     if (hasWindow) {
       this.props.closeInfoWindow(locId);
+      this.handleDrawerClose();
       return { result: "exists" };
     }
     if (!hasWindow) {
-      // if (this.props.getMarker(locId).payload.length > 0) {
       this.props.openInfoWindow(locId);
-      // }
+      this.handleDrawerClose();
       return { result: "new" };
     }
 
-    // getLocationData can return multiple locations as an array
-    // Only will return the location that was clicked so I explicitly get that array element [0][0]
-    // markerData = {position, imgUrl, funFacts, locName, openWindow}
-    // let markerData = this.props.getLocationData(
-    //   event.currentTarget.getAttribute("value"),
-    //   locId
-    // ).payload[0][0];
-    // markerData = { ...markerData, openWindow: true, locId };
-
-    // this.props.createMarker(markerData);
     return { result: "added" };
-    // this.handleDrawerClose();
   };
 
   handleLocationClick = event => {
     const active = event.currentTarget.getAttribute("data-active");
     const locId = event.currentTarget.getAttribute("data-id");
+
     if (active === "true") {
       this.props.setMapOnOne(locId);
       return { result: "exists" };
@@ -89,24 +106,21 @@ class App extends Component {
       locId
     ).payload[0][0];
     markerData = { ...markerData, openWindow: true, locId };
-    // markerData = {position, imgUrl, funFacts, locName, openWindow}
+    //NOTE markerData = {position, imgUrl, funFacts, locName, openWindow}
 
     this.props.createMarker(markerData);
+    this.handleDrawerClose();
     return { result: "added" };
-    // this.handleDrawerClose();
   };
 
-  componentDidMount() {
-    this.props.getViewedTitles();
-    this.setState({ open: true });
-  }
-
   handleDrawerOpen = () => {
-    this.setState({ open: true });
+    this.setState({ drawerOpen: true });
   };
 
   handleDrawerClose = () => {
-    this.setState({ open: false });
+    if (window.innerWidth < 412) {
+      this.setState({ drawerOpen: false });
+    }
   };
 
   handleModalOpen = event => {
@@ -136,7 +150,7 @@ class App extends Component {
 
     //Simulate a movie selection
     //Part of the onboarding process.
-    this.handleOnSelect("Invasion of the Body Snatchers");
+    this.handleOnSelect(this.state.startSearch);
   };
   handleErrorMessage = errorMessage => this.setState({ errorMessage });
 
@@ -191,7 +205,6 @@ class App extends Component {
         request.dataSource = results.payload.dataSource;
 
         if (request.dataSource === "db") {
-          // this.props.getLocDataReqManager(request);
           const MAP_GET_LOC_DATA_IN_BG = "MAP_GET_LOC_DATA_IN_BG";
           const requestArray = Object.keys(request);
 
@@ -237,58 +250,91 @@ class App extends Component {
         console.error(`An error occured when looking up movie info`, err);
       });
   };
+  getWidth = () => {
+    return window.innerWidth;
+  };
   render() {
-    const { isGettingGooglePlaceResults } = this.props;
-
+    const { isGettingGooglePlaceResults, movieDetails, zoomToSF } = this.props;
+    const { drawerOpen } = this.state;
     return (
-      <div className="App">
-        {this.state.showOverlay &&
-          !document.cookie
-            .split(";")
-            .filter(item => item.includes("showSFMOverlay=false")).length && (
-            <OnboardOverlay handleOverlayClose={this.handleOverlayClose} />
-          )}
-        {/* conditionally show Modal */}
-        <Modal
-          aria-labelledby="simple-modal-title"
-          aria-describedby="simple-modal-description"
-          open={this.state.modalOpen}
-          onClose={this.handleModalClose}
-          style={{ display: "flex", alignItems: "center" }}
-        >
-          <div style={this.getModalStyle()}>
-            <img src={this.state.photoUrl} style={{ maxWidth: 1400 }} alt="" />
-          </div>
-        </Modal>
-        <div>{this.state.errorMessage}</div>
-        <SearchBar
-          handleDrawerClose={this.handleDrawerClose}
-          handleDrawerOpen={this.handleDrawerOpen}
-          deleteMarkers={deleteMarkers}
-          open={this.state.open}
-          startSearch={this.state.startSearch}
-          handleOnSelect={this.handleOnSelect}
-          isGettingGooglePlaceResults={isGettingGooglePlaceResults}
-        />
-        <main>
-          <ToolDrawer
-            open={this.state.open}
+      <MuiThemeProvider theme={theme}>
+        <div className="App">
+          {this.state.showOverlay &&
+            !document.cookie
+              .split(";")
+              .filter(item => item.includes("showSFMOverlay=false")).length && (
+              <OnboardOverlay handleOverlayClose={this.handleOverlayClose} />
+            )}
+          {/* conditionally show Modal */}
+          <Modal
+            aria-labelledby="simple-modal-title"
+            aria-describedby="simple-modal-description"
+            open={this.state.modalOpen}
+            onClose={this.handleModalClose}
+            style={{ display: "flex", alignItems: "center" }}
+          >
+            <div style={this.getModalStyle()}>
+              <img
+                src={this.state.photoUrl}
+                style={{ maxWidth: 1400 }}
+                alt="San Francisco and Golden Gate bridge"
+              />
+            </div>
+          </Modal>
+          <div>{this.state.errorMessage}</div>
+          <SearchBar
             handleDrawerClose={this.handleDrawerClose}
+            handleDrawerOpen={this.handleDrawerOpen}
             deleteMarkers={deleteMarkers}
-            clearMarkers={clearMarkers}
-            showMarkers={showMarkers}
-            handleShowAll={this.handleShowAll}
-            isGettingGooglePlaceResults={isGettingGooglePlaceResults}
+            open={this.state.open}
+            drawerOpen={drawerOpen}
+            startSearch={this.state.startSearch}
             handleOnSelect={this.handleOnSelect}
-            handleModalOpen={this.handleModalOpen}
-            handleModalClose={this.handleModalClose}
-            handleLocationClick={this.handleLocationClick}
-            handleDeleteViewedTitles={this.handleDeleteViewedTitles}
-            handleInfoWindowClick={this.handleInfoWindowClick}
+            isGettingGooglePlaceResults={isGettingGooglePlaceResults}
           />
-          <MainMap id="movieMap" initMap={initMap} />
-        </main>
-      </div>
+          {this.getWidth() < 420 && (
+            <MarkerControlsMenu
+              zoomToSF={zoomToSF}
+              movieDetails={movieDetails}
+              clearMarkers={this.props.clearMarkers}
+              showMarkers={this.props.showMarkers}
+              deleteMarkers={this.props.deleteMarkers}
+              handleShowAll={this.handleShowAll}
+              handleDrawerClose={this.handleDrawerClose}
+              handleDrawerOpen={this.handleDrawerOpen}
+              open={this.state.open}
+              drawerOpen={drawerOpen}
+              handleOnSelect={this.handleOnSelect}
+              isGettingGooglePlaceResults={isGettingGooglePlaceResults}
+            />
+          )}
+          {/* {this.getWidth() > 419 && ( */}
+          <main>
+            <ToolDrawer
+              open={this.state.open}
+              drawerOpen={drawerOpen}
+              handleDrawerClose={this.handleDrawerClose}
+              deleteMarkers={deleteMarkers}
+              clearMarkers={clearMarkers}
+              showMarkers={showMarkers}
+              handleShowAll={this.handleShowAll}
+              isGettingGooglePlaceResults={isGettingGooglePlaceResults}
+              handleOnSelect={this.handleOnSelect}
+              handleModalOpen={this.handleModalOpen}
+              handleModalClose={this.handleModalClose}
+              handleLocationClick={this.handleLocationClick}
+              handleDeleteViewedTitles={this.handleDeleteViewedTitles}
+              handleInfoWindowClick={this.handleInfoWindowClick}
+            />
+          </main>
+          {/* )} */}
+          <MainMap
+            id="movieMap"
+            initMap={initMap}
+            movieDetails={movieDetails}
+          />
+        </div>
+      </MuiThemeProvider>
     );
   }
 }
@@ -308,38 +354,43 @@ App.propTypes = {
   openInfoWindow: PropTypes.func,
   setMapOnOne: PropTypes.func,
   hasWindow: PropTypes.func,
-  getMarker: PropTypes.func
+  getMarker: PropTypes.func,
+  zoomToSF: PropTypes.func
 };
 
 function mapStateToProps(state) {
   return {
-    isGettingGooglePlaceResults: state.maps.isGettingGooglePlaceResults
+    isGettingGooglePlaceResults: state.maps.isGettingGooglePlaceResults,
+    movieDetails: state.movies.movieDetails
   };
 }
-export default connect(
-  mapStateToProps,
-  {
-    clearMovieAC,
-    initMap,
-    clearMarkers,
-    showMarkers,
-    deleteMarkers,
-    fetchMovieByTitle,
-    clearGooglePlaceResults,
-    toggleIsGettingGooglePlaceResults,
-    showAllLocations,
-    setOnboardingCookie,
-    getViewedTitles,
-    getLocDataReqManager,
-    createMarker,
-    getLocationData,
-    mapPlaces,
-    zeroCounters,
-    deleteViewedTitles,
-    closeInfoWindow,
-    openInfoWindow,
-    setMapOnOne,
-    hasWindow,
-    getMarker
-  }
-)(App);
+export default withStyles(styles)(
+  connect(
+    mapStateToProps,
+    {
+      clearMovieAC,
+      initMap,
+      clearMarkers,
+      showMarkers,
+      deleteMarkers,
+      fetchMovieByTitle,
+      clearGooglePlaceResults,
+      toggleIsGettingGooglePlaceResults,
+      showAllLocations,
+      setOnboardingCookie,
+      getViewedTitles,
+      getLocDataReqManager,
+      createMarker,
+      getLocationData,
+      mapPlaces,
+      zeroCounters,
+      deleteViewedTitles,
+      closeInfoWindow,
+      openInfoWindow,
+      setMapOnOne,
+      hasWindow,
+      getMarker,
+      zoomToSF
+    }
+  )(App)
+);

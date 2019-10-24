@@ -1,7 +1,22 @@
 import React, { Component } from "react";
-
-import { connect } from "react-redux";
-
+import { withStyles, Typography } from "@material-ui/core/";
+const styles = theme => ({
+  title: {
+    position: "fixed",
+    top: 57,
+    left: 8,
+    zIndex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
+    padding: 10
+  },
+  //TODO Breakpoints
+  [theme.breakpoints.down("xs")]: {
+    movieMap: { width: "100vw", height: window.innerHeight - 60 }
+  },
+  [theme.breakpoints.up("sm")]: {
+    movieMap: { width: "100vw", height: "100vh" }
+  }
+});
 class MainMap extends Component {
   componentDidMount() {
     if (!window.google) {
@@ -21,10 +36,17 @@ class MainMap extends Component {
   }
 
   render() {
+    const { classes, movieDetails } = this.props;
+
     return (
-      <div style={{ width: "100vw", height: "100vh" }} id={this.props.id} />
+      <React.Fragment>
+        <Typography variant="h4" className={classes.title}>
+          {movieDetails.title}
+        </Typography>
+        <div className={classes.movieMap} id={this.props.id} />
+      </React.Fragment>
     );
   }
 }
 
-export default connect()(MainMap);
+export default withStyles(styles)(MainMap);

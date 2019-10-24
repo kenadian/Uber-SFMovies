@@ -19,7 +19,8 @@ import {
   MAP_CLOSE_INFO_WINDOW,
   MAP_SET_MAP_ON_ONE,
   MAP_GET_MARKER,
-  MAP_HAS_WINDOW
+  MAP_HAS_WINDOW,
+  MAP_ZOOM_TO_SF
 } from "../actions/map_actions";
 
 let initialState = {
@@ -32,6 +33,8 @@ let initialState = {
 
 export default function(state = initialState, action) {
   switch (action.type) {
+    case MAP_ZOOM_TO_SF:
+      return { ...state };
     case MAP_HAS_WINDOW:
       return { ...state };
     case MAP_GET_MARKER:

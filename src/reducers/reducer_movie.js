@@ -1,3 +1,14 @@
+/**
+ * Summary. (use period)
+ *
+ * Description. (use period)
+ *
+ * @link   none
+ * @file   Reducer for Movie related actions
+ * @author Ken Hare
+ * @since  0.0.1
+ */
+
 import {
   FETCH_MOVIE_AC,
   FETCH_MOVIE_BY_ROW,
@@ -8,6 +19,7 @@ import {
   MOVIE_GET_VIEWED_TITLES,
   MOVIE_DELETE_VIEWED_TITLES
 } from "../actions/movie_actions";
+
 import {
   MAP_CREATE_MARKER,
   MAP_CLEAR_MARKERS,
@@ -27,8 +39,16 @@ let initialState = {
   movieDetails: {}
 };
 
+/**
+ * Reducer
+ *
+ * @export
+ * @param {Obj} [state=initialState]
+ * @param {Obj} action
+ * @returns
+ */
 export default function(state = initialState, action) {
-  //TODO move the markers to maps unless that doesn't work
+  //TODO move the MAP_* types to maps unless that doesn't work
   switch (action.type) {
     case MAP_CLOSE_ALL_INFO_WINDOWS:
       return {
@@ -47,7 +67,9 @@ export default function(state = initialState, action) {
       const newMarkerWindow = state.markerWindows.filter(
         value => value !== action.payload
       );
-
+      //TODO Change to markerWindow:action.payload
+      // only one info window at a time is active
+      // or leave it and have different behaviour based on screen size
       return { ...state, markers, markerWindows: newMarkerWindow };
 
     case MAP_OPEN_INFO_WINDOW:

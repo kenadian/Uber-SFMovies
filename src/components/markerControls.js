@@ -10,9 +10,15 @@ import {
 import { DeleteForever, ToggleOff, ToggleOn } from "@material-ui/icons/";
 
 function MarkerControls(props) {
-  const { movieDetails, clearMarkers, showMarkers, deleteMarkers } = props;
+  const {
+    movieDetails,
+    clearMarkers,
+    showMarkers,
+    deleteMarkers,
+    classes
+  } = props;
   return (
-    <List>
+    <List className={classes.markerControls}>
       <ListItem button disabled={!movieDetails} onClick={clearMarkers}>
         <ListItemIcon>
           <ToggleOff />

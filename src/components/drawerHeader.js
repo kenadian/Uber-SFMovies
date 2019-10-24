@@ -22,15 +22,23 @@ const styles = theme => ({
   drawerHeader: {
     display: "flex",
     alignItems: "center",
-    padding: "0 8px",
+    width: window.innerWidth - 1,
+    // margin: "0 8px",
     ...theme.mixins.toolbar,
-    justifyContent: "flex-start"
+    justifyContent: "flex-start",
+    zIndex: 1,
+    [theme.breakpoints.down("sm")]: {
+      backgroundColor: "rgba(255, 255, 255, 0.99)",
+      position: "sticky",
+
+      top: 0
+    }
   },
   movieInfo: {
     padding: "11px 16px 11px 16px"
   },
   deleteButton: {
-    width: "70"
+    // width: 70
   }
 });
 

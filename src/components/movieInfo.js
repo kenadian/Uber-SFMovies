@@ -22,9 +22,10 @@ class MovieInfo extends PureComponent {
       locationCount,
       handleCloseAllInfoWindows,
       markers,
-      markerWindows
+      markerWindows,
+      handleOnClickDetails,
+      showDetails
     } = this.props;
-
     return (
       <React.Fragment>
         {!movieDetails.hasOwnProperty("title") && (
@@ -35,13 +36,18 @@ class MovieInfo extends PureComponent {
         )}
         {movieDetails.hasOwnProperty("title") && (
           <div className={classes.movieInfo}>
-            <MovieDetail movieDetails={movieDetails} />
+            <MovieDetail
+              movieDetails={movieDetails}
+              handleOnClickDetails={handleOnClickDetails}
+              showDetails={showDetails}
+            />
 
             <LocationTitle
               movieLocationsLength={locationCount}
               handleShowAll={handleShowAll}
               progressCounter={progressCounter}
               handleCloseAllInfoWindows={handleCloseAllInfoWindows}
+              classes={classes}
             />
 
             {!isGettingGooglePlaceResults &&
@@ -54,12 +60,12 @@ class MovieInfo extends PureComponent {
                 );
 
                 const hasMarker = markers.includes(loc.id)
-                  ? { color: "red", active: true }
+                  ? { color: "#ff0000", active: true }
                   : { color: "#3f51b5", active: false };
 
                 // test  marker.infoWindowForMarker.anchor to tell if the window has been closed
                 const hasMarkerWindow = markerWindows.includes(loc.id)
-                  ? { color: "red", active: true }
+                  ? { color: "#ff0000", active: true }
                   : { color: "#3f51b5", active: false };
 
                 /*

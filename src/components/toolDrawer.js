@@ -1,4 +1,4 @@
-import React, { PureComponent } from "react";
+import React, { Component } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 
@@ -8,68 +8,129 @@ import MovieInfo from "./movieInfo";
 import DrawerHead from "./drawerHeader";
 import { Divider, Drawer, withStyles } from "@material-ui/core/";
 
-const drawerWidth = "25%";
+const styles = theme => {
+  // theme.breakpoints.values.xs = 376;
+  // theme.breakpoints.values.sm = 412;
+  return {
+    drawer: {
+      [theme.breakpoints.down("sm")]: {
+        width: "100%"
+      },
+      [theme.breakpoints.up("sm")]: {
+        width: "25%"
+      },
+      flexShrink: 0
+    },
+    drawerPaper: {
+      [theme.breakpoints.down("sm")]: {
+        width: window.innerWidth - 1
+      },
+      [theme.breakpoints.up("sm")]: {
+        width: "25%"
+      },
+      [theme.breakpoints.down("sm")]: {
+        backgroundColor: "rgba(255, 255, 255, 0.93)",
+        height: window.innerHeight - 61
+      }
+    },
 
-const styles = theme => ({
-  drawer: {
-    width: drawerWidth,
-    flexShrink: 0
-  },
-  drawerPaper: {
-    width: drawerWidth
-  },
-  movieInfo: {
-    padding: "11px 36px 11px 16px"
-  }
-});
-
-class ToolDrawer extends PureComponent {
-  state = {
-    open: false
+    movieInfo: {
+      [theme.breakpoints.down("sm")]: {
+        margin: "11px 20px 11px 20px",
+        padding: 0
+      },
+      padding: "11px 36px 11px 16px"
+    },
+    markerControls: {
+      [theme.breakpoints.down("sm")]: {
+        display: "none"
+      }
+    },
+    showAll: {
+      [theme.breakpoints.down("sm")]: {
+        display: "none"
+      }
+    }
   };
+};
 
+class ToolDrawer extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      showDetails: false
+    };
+    this.handleOnClickDetails = this.handleOnClickDetails.bind(this);
+  }
+  /**
+   * toggles production info on and off in MovieDetails
+   *
+   * @memberof ToolDrawer
+   */
+  handleOnClickDetails() {
+    this.setState({ showDetails: !this.state.showDetails });
+  }
   handleViewedTitlesClick = event => {
     this.props.handleOnSelect(event.currentTarget.attributes.datavalue.value);
   };
   render() {
-    const { classes, theme } = this.props;
-
+    const {
+      classes,
+      theme,
+      drawerOpen,
+      handleDrawerClose,
+      viewedTitles,
+      handleDeleteViewedTitles,
+      movieDetails,
+      handleShowAll,
+      handleLocationClick,
+      handleModalOpen,
+      handleCloseAllInfoWindows,
+      handleInfoWindowClick,
+      googlePlaceResults,
+      clearMarkers,
+      showMarkers,
+      deleteMarkers
+    } = this.props;
     return (
       <Drawer
         className={classes.drawer}
         variant="persistent"
         anchor="right"
-        open={this.props.open}
+        open={drawerOpen}
         classes={{
           paper: classes.drawerPaper
         }}
       >
         <DrawerHead
-          handleDrawerClose={this.props.handleDrawerClose}
-          viewedTitles={this.props.viewedTitles}
+          handleDrawerClose={handleDrawerClose}
+          viewedTitles={viewedTitles}
           handleViewedTitlesClick={this.handleViewedTitlesClick}
-          handleDeleteViewedTitles={this.props.handleDeleteViewedTitles}
+          handleDeleteViewedTitles={handleDeleteViewedTitles}
         />
         <Divider />
         <MovieInfo
-          movieDetails={this.props.movieDetails}
-          handleShowAll={this.props.handleShowAll}
-          handleLocationClick={this.props.handleLocationClick}
-          handleModalOpen={this.props.handleModalOpen}
-          handleCloseAllInfoWindows={this.props.handleCloseAllInfoWindows}
-          handleInfoWindowClick={this.props.handleInfoWindowClick}
+          movieDetails={movieDetails}
+          handleShowAll={handleShowAll}
+          handleLocationClick={handleLocationClick}
+          handleModalOpen={handleModalOpen}
+          handleCloseAllInfoWindows={handleCloseAllInfoWindows}
+          handleInfoWindowClick={handleInfoWindowClick}
+          handleOnClickDetails={this.handleOnClickDetails}
+          showDetails={this.state.showDetails}
           theme={theme}
           classes={classes}
-          googlePlaceResults={this.props.googlePlaceResults}
+          googlePlaceResults={googlePlaceResults}
         />
 
         <Divider />
 
         <MarkerControls
-          movieDetails={this.props.movieDetails}
-          clearMarkers={this.props.clearMarkers}
-          showMarkers={this.props.showMarkers}
-          deleteMarkers={this.props.deleteMarkers}
+          classes={classes}
+          movieDetails={movieDetails}
+          clearMarkers={clearMarkers}
+          showMarkers={showMarkers}
+          deleteMarkers={deleteMarkers}
         />
         <Divider />
         <Footer />

@@ -24,6 +24,7 @@ export const MAP_OPEN_INFO_WINDOW = "MAP_OPEN_INFO_WINDOW";
 export const MAP_SET_MAP_ON_ONE = "MAP_SET_MAP_ON_ONE";
 export const MAP_GET_MARKER = "MAP_GET_MARKER";
 export const MAP_HAS_WINDOW = "MAP_HAS_WINDOW";
+export const MAP_ZOOM_TO_SF = "MAP_ZOOM_TO_SF";
 
 let movieMap, placesService;
 let sanFrancisco = { lat: 37.7749295, lng: -122.4364155 };
@@ -49,6 +50,13 @@ function calculateZoom() {
   if (width < small) return 11.2;
   return 13;
 }
+
+export function zoomToSF() {
+  movieMap.setCenter(sanFrancisco);
+  movieMap.setZoom(calculateZoom());
+  return { type: MAP_ZOOM_TO_SF };
+}
+
 export function closeAllInfoWindows() {
   movieMap.markers.forEach(marker => {
     marker.infoWindowForMarker.close();
@@ -79,6 +87,7 @@ export function openInfoWindow(locId) {
   });
 
   if (marker.length > 0) {
+    store.dispatch(closeAllInfoWindows());
     marker[0].infoWindowForMarker.open("movieMap", marker[0]);
     return {
       type: MAP_OPEN_INFO_WINDOW,
@@ -156,7 +165,8 @@ export function initMap() {
       position: window.google.maps.ControlPosition.BOTTOM_CENTER
     },
     center: sanFrancisco,
-    markers: []
+    markers: [],
+    disableDefaultUI: true
   });
   // closes all info windows when the map is clicked
   // this augments the default window close behaviour, click on the 'x'
@@ -270,6 +280,7 @@ export function getLocationDataInBackground(movieLocation) {
 
 export function showAllLocations() {
   deleteMarkers();
+
   //Todo make function composable
   //return array of values that have been sucessfully plotted
   const showAllResult = store.getState().maps.googlePlaceResults.map(result => {
@@ -305,6 +316,7 @@ export function showAllLocations() {
     return true;
   });
 
+  openInfoWindow(store.getState().movies.markerWindows[0]);
   movieMap.setCenter(sanFrancisco);
   movieMap.setZoom(calculateZoom());
 
@@ -346,6 +358,7 @@ export function createMarker(markerData) {
   // build the marker and save it to the markers array if this is the first marker plotted
   // or the marker hasn't been plotted before
   if (!markersLocNames.includes(locName) || movieMap.markers.length === 0) {
+    store.dispatch(closeAllInfoWindows());
     marker = new window.google.maps.Marker({
       map: movieMap,
       position,
@@ -374,7 +387,14 @@ export function createMarker(markerData) {
   }
 
   movieMap.setCenter(position);
-  movieMap.setZoom(16);
+  if (window.innerWidth === 375) {
+    movieMap.panBy(0, -200);
+    movieMap.setZoom(14);
+  }
+  if (window.innerWidth > 375) {
+    movieMap.setZoom(16);
+    movieMap.panBy(150, 0);
+  }
   const payload = movieMap.markers
     // .filter(marker => marker.locId === locId)
     .map(marker => marker.locId);
@@ -469,9 +489,12 @@ const infoWindow = (imgUrl, funFacts, locName, openWindow, marker) => {
     locName
   }); //builds html for infoWindow
 
-  const infoWindowObject = new window.google.maps.InfoWindow({ maxWidth: 300 });
+  const infoWindowObject = new window.google.maps.InfoWindow({
+    content: infoWindowContent,
+    maxWidth: 300
+  });
   // display the info window if markerData.openWindow:true
-  infoWindowObject.setContent(infoWindowContent);
+
   if (openWindow) {
     infoWindowObject.open(movieMap, marker);
   }

@@ -12,7 +12,8 @@ import {
   List,
   ListItem,
   Typography,
-  ListItemText
+  ListItemText,
+  Grid
 } from "@material-ui/core";
 
 import { fade } from "@material-ui/core/styles/colorManipulator";
@@ -27,15 +28,27 @@ import {
 } from "../actions/movie_actions";
 
 const styles = theme => ({
+  appBar: {
+    // [theme.breakpoints.down("sm")]: {
+    //   display: "none"
+    // }
+  },
   grow: {
     flexGrow: 1
   },
   title: {
+    [theme.breakpoints.down("sm")]: {
+      display: "none"
+    },
     paddingLeft: 50
   },
   menuButton: {
     marginLeft: 12,
-    marginRight: 20
+    marginRight: 20,
+    [theme.breakpoints.down("sm")]: {
+      marginLeft: 0,
+      marginRight: 4
+    }
   },
   hide: {
     display: "none"
@@ -53,11 +66,17 @@ const styles = theme => ({
     [theme.breakpoints.up("sm")]: {
       marginLeft: theme.spacing.unit * 3,
       width: "auto"
+    },
+    [theme.breakpoints.down("sm")]: {
+      width: "unset"
     }
   },
   item: {},
   itemHighlight: { backgroundColor: "rgba(63, 81, 181, 0.31)" },
   searchIcon: {
+    [theme.breakpoints.down("sm")]: {
+      width: theme.spacing.unit * 8
+    },
     width: theme.spacing.unit * 9,
     height: "100%",
     position: "absolute",
@@ -67,6 +86,10 @@ const styles = theme => ({
     justifyContent: "center"
   },
   inputRoot: {
+    [theme.breakpoints.down("sm")]: {
+      width: "unset"
+    },
+    marginLeft: 25,
     color: "inherit",
     width: "100%",
     fontSize: 24,
@@ -78,9 +101,15 @@ const styles = theme => ({
     paddingBottom: theme.spacing.unit,
     paddingLeft: theme.spacing.unit * 10,
     transition: theme.transitions.create("width"),
-    width: "100%",
-    [theme.breakpoints.up("md")]: {
-      width: 200
+    // width: "100%",
+    height: 40,
+    fontSize: 22,
+    width: 400,
+    marginLeft: 25,
+    [theme.breakpoints.down("sm")]: {
+      width: 207,
+      paddingLeft: theme.spacing.unit * 5,
+      fontSize: 18
     }
   },
   searchListOff: { display: "none" },
@@ -104,9 +133,17 @@ class SearchBar extends Component {
   }
 
   render() {
-    const { classes } = this.props;
+    const {
+      classes,
+      open,
+      drawerOpen,
+      isGettingGooglePlaceResults,
+      handleDrawerClose,
+      fetchMovieAC,
+      handleOnSelect,
+      handleDrawerOpen
+    } = this.props;
     const searchResults = this.props.movieSearchResults;
-    const { open } = this.props.open;
 
     return (
       <AppBar
@@ -119,110 +156,109 @@ class SearchBar extends Component {
           <Typography variant="h6" color="inherit" className={classes.title}>
             SF Movies
           </Typography>
-          <div className={classes.search}>
-            {!this.props.isGettingGooglePlaceResults && (
-              <div className={classes.searchIcon}>
+          <Grid container className={classes.search}>
+            {!isGettingGooglePlaceResults && (
+              <Grid item className={classes.searchIcon}>
                 <SearchIcon />
-              </div>
+              </Grid>
             )}
-            {this.props.isGettingGooglePlaceResults && (
-              <div className={classes.searchIcon}>
+            {isGettingGooglePlaceResults && (
+              <Grid item className={classes.searchIcon}>
                 <CircularProgress style={{ height: 20, width: 20 }} />
-              </div>
+              </Grid>
             )}
+            <Grid item>
+              <Autocomplete
+                renderInput={props => {
+                  return (
+                    <InputBase
+                      classes={{
+                        root: classes.inputRoot,
+                        input: classes.inputInput
+                      }}
+                      inputProps={props}
+                      disabled={isGettingGooglePlaceResults}
+                    />
+                  );
+                }}
+                inputProps={{
+                  id: "term",
+                  placeholder: "Film Title (min 3 letters)",
+                  // className: classes.uiWidget,
+                  // style: { height: 40, fontSize: 22, width: 400, marginLeft: 25 },
+                  autoFocus: true
+                }}
+                getItemValue={item => {
+                  return String(item.term);
+                }}
+                items={searchResults ? searchResults : []}
+                value={this.state.value}
+                onChange={(event, value) => {
+                  this.setState({ value: value });
 
-            <Autocomplete
-              renderInput={props => {
-                return (
-                  <InputBase
-                    classes={{
-                      root: classes.inputRoot,
-                      input: classes.inputInput
-                    }}
-                    inputProps={props}
-                    disabled={this.props.isGettingGooglePlaceResults}
-                  />
-                );
-              }}
-              inputProps={{
-                id: "term",
-                placeholder: "Film Title (min 3 letters)",
-                // className: classes.uiWidget,
-                style: { height: 40, fontSize: 22, width: 400, marginLeft: 25 },
-                autoFocus: true
-              }}
-              getItemValue={item => {
-                return String(item.term);
-              }}
-              items={searchResults ? searchResults : []}
-              value={this.state.value}
-              onChange={(event, value) => {
-                this.setState({ value: value });
-
-                if (event.target.value.length === 0) {
-                  this.props.handleDrawerClose();
-                }
-                if (event.target.value.length >= 3) {
-                  this.props
-                    .fetchMovieAC(value)
-                    .catch(err =>
+                  if (event.target.value.length === 0) {
+                    handleDrawerClose();
+                  }
+                  if (event.target.value.length >= 3) {
+                    fetchMovieAC(value).catch(err =>
                       console.error(`Can't get value for AutoComplete${err}`)
                     );
-                }
-              }}
-              onSelect={(value, item) => {
-                this.setState({
-                  value: item.title,
-                  isFetching: true
-                });
-                this.props.handleOnSelect(item.title);
+                  }
+                }}
+                onSelect={(value, item) => {
+                  this.setState({
+                    value: item.title,
+                    isFetching: true
+                  });
+                  handleOnSelect(item.title);
 
-                //
-              }}
-              renderMenu={children => {
-                return (
-                  <List
-                    id="movieSearch"
-                    className={
-                      children.length === 0
-                        ? classes.searchListOff
-                        : classes.searchListOn
-                    }
-                  >
-                    {children}
-                  </List>
-                );
-              }}
-              renderItem={(item, isHighlighted) => {
-                return (
-                  <ListItem
-                    className={
-                      isHighlighted ? classes.itemHighlight : classes.item
-                    }
-                    key={item.title}
-                  >
-                    <ListItemText
-                      style={{
-                        height: 25,
-                        minWidth: 200,
-                        paddingRight: 25,
-                        color: "black"
-                      }}
+                  //
+                }}
+                renderMenu={children => {
+                  return (
+                    <List
+                      id="movieSearch"
+                      className={
+                        children.length === 0
+                          ? classes.searchListOff
+                          : classes.searchListOn
+                      }
                     >
-                      {item.title}{" "}
-                    </ListItemText>
-                  </ListItem>
-                );
-              }}
-              autoHighlight={true}
-              type="text"
-            />
-          </div>
+                      {children}
+                    </List>
+                  );
+                }}
+                renderItem={(item, isHighlighted) => {
+                  return (
+                    <ListItem
+                      className={
+                        isHighlighted ? classes.itemHighlight : classes.item
+                      }
+                      key={item.title}
+                    >
+                      <ListItemText
+                        style={{
+                          height: 25,
+                          minWidth: 200,
+                          paddingRight: 25,
+                          color: "black"
+                        }}
+                      >
+                        {item.title}{" "}
+                      </ListItemText>
+                    </ListItem>
+                  );
+                }}
+                autoHighlight={true}
+                type="text"
+              />
+            </Grid>
+          </Grid>
           <div className={classes.grow} />
           <IconButton
             color="inherit"
             aria-label="Open drawer"
-            onClick={this.props.handleDrawerOpen}
+            onClick={handleDrawerOpen}
             className={classNames(classes.menuButton, open && classes.hide)}
           >
             <MenuIcon />
