@@ -7,7 +7,10 @@ import {
   withStyles,
   Menu,
   MenuItem,
-  Button
+  Button,
+  FormGroup,
+  Checkbox,
+  FormControlLabel
 } from "@material-ui/core/";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
@@ -39,6 +42,12 @@ const styles = theme => ({
   },
   deleteButton: {
     // width: 70
+  },
+  checkboxLabel: {
+    fontSize: 8
+  },
+  checkbox: {
+    padding: 2
   }
 });
 
@@ -90,8 +99,11 @@ class drawerHead extends Component {
       theme,
       handleDrawerClose,
       viewedTitles,
-      handleViewedTitlesClick
+      handleViewedTitlesClick,
+      handleOnClickKeepDrawerOpen,
+      keepDrawerOpen
     } = this.props;
+
     return (
       <div className={classes.drawerHeader}>
         <IconButton onClick={handleDrawerClose}>
@@ -150,6 +162,23 @@ class drawerHead extends Component {
               })}
           </Menu>
         </div>
+        {window.innerWidth < 415 && (
+          <FormGroup row>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={keepDrawerOpen}
+                  onChange={handleOnClickKeepDrawerOpen}
+                  value="true"
+                  classes={{ root: classes.checkbox }}
+                />
+              }
+              label="Keep Open"
+              classes={{ label: classes.checkboxLabel }}
+              labelPlacement="bottom"
+            />
+          </FormGroup>
+        )}
       </div>
     );
   }

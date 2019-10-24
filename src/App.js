@@ -61,6 +61,7 @@ class App extends Component {
     //TODO give state.open a new name
     open: false,
     drawerOpen: false,
+    keepDrawerOpen: false,
     showOverlay:
       document.cookie
         .split(";")
@@ -113,7 +114,9 @@ class App extends Component {
     //NOTE markerData = {position, imgUrl, funFacts, locName, openWindow}
 
     this.props.createMarker(markerData);
-    this.handleDrawerClose();
+    if (!this.state.keepDrawerOpen) {
+      this.handleDrawerClose();
+    }
     return { result: "added" };
   };
 
@@ -122,7 +125,7 @@ class App extends Component {
   };
 
   handleDrawerClose = () => {
-    if (window.innerWidth < 412) {
+    if (window.innerWidth < 415) {
       this.setState({ drawerOpen: false });
     }
   };
@@ -143,7 +146,9 @@ class App extends Component {
   handleModalClose = () => {
     this.setState({ modalOpen: false });
   };
-
+  handleOnClickKeepDrawerOpen = () => {
+    this.setState({ keepDrawerOpen: !this.state.keepDrawerOpen });
+  };
   handleOverlayClose = event => {
     let forever = null;
     if (event.currentTarget.attributes.hasOwnProperty("forever")) {
@@ -266,7 +271,7 @@ class App extends Component {
 
   render() {
     const { isGettingGooglePlaceResults, movieDetails, zoomToSF } = this.props;
-    const { drawerOpen } = this.state;
+    const { drawerOpen, keepDrawerOpen } = this.state;
     return (
       <MuiThemeProvider theme={theme}>
         <div className="App">
@@ -334,6 +339,8 @@ class App extends Component {
               handleLocationClick={this.handleLocationClick}
               handleDeleteViewedTitles={this.handleDeleteViewedTitles}
               handleInfoWindowClick={this.handleInfoWindowClick}
+              handleOnClickKeepDrawerOpen={this.handleOnClickKeepDrawerOpen}
+              keepDrawerOpen={keepDrawerOpen}
             />
           </main>
           {/* )} */}

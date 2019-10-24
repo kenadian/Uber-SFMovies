@@ -11,14 +11,24 @@ function MovieDetail(props) {
         </Grid>
         <Grid item>
           <Button type="link" onClick={handleOnClickDetails}>
-            {showDetails && `Hide Details`}
-            {!showDetails && `Show Details`}
+            {showDetails && (
+              <span style={{ color: "rgb(63, 81, 181)" }}>Hide Details</span>
+            )}
+            {!showDetails && (
+              <span style={{ color: "rgb(63, 81, 181)" }}>Show Details</span>
+            )}
           </Button>
         </Grid>
       </Grid>
 
       {showDetails && (
-        <div>
+        <div
+          style={{
+            backgroundColor: "#f3f3ff",
+            margin: "0 -20px",
+            padding: "0 20px 5px 20px"
+          }}
+        >
           <Typography variant="h6">Actors</Typography>
 
           <Typography variant="body1">

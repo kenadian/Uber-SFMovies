@@ -22,15 +22,15 @@ const styles = theme => {
       flexShrink: 0
     },
     drawerPaper: {
+      backgroundColor: "rgba(255, 255, 255, 0.93)",
       [theme.breakpoints.down("sm")]: {
-        width: window.innerWidth - 1
+        width: window.innerWidth - 1,
+        height: window.innerHeight - 61
       },
       [theme.breakpoints.up("sm")]: {
-        width: "25%"
-      },
-      [theme.breakpoints.down("sm")]: {
-        backgroundColor: "rgba(255, 255, 255, 0.93)",
-        height: window.innerHeight - 61
+        width: "25%",
+        minWidth: 338,
+        height: window.innerHeight
       }
     },
 
@@ -42,12 +42,12 @@ const styles = theme => {
       padding: "11px 36px 11px 16px"
     },
     markerControls: {
-      [theme.breakpoints.down("sm")]: {
+      [theme.breakpoints.down("xs")]: {
         display: "none"
       }
     },
     showAll: {
-      [theme.breakpoints.down("sm")]: {
+      [theme.breakpoints.down("xs")]: {
         display: "none"
       }
     }
@@ -90,7 +90,9 @@ class ToolDrawer extends Component {
       googlePlaceResults,
       clearMarkers,
       showMarkers,
-      deleteMarkers
+      deleteMarkers,
+      handleOnClickKeepDrawerOpen,
+      keepDrawerOpen
     } = this.props;
     return (
       <Drawer
@@ -107,6 +109,8 @@ class ToolDrawer extends Component {
           viewedTitles={viewedTitles}
           handleViewedTitlesClick={this.handleViewedTitlesClick}
           handleDeleteViewedTitles={handleDeleteViewedTitles}
+          handleOnClickKeepDrawerOpen={handleOnClickKeepDrawerOpen}
+          keepDrawerOpen={keepDrawerOpen}
         />
         <Divider />
         <MovieInfo
