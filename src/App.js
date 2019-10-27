@@ -7,6 +7,7 @@ import MarkerControlsMenu from "./components/markerControlsMenu";
 import ToolDrawer from "./components/toolDrawer";
 import OnboardOverlay from "./components/onboardOverlay";
 import { Modal } from "@material-ui/core/";
+
 import {
   MuiThemeProvider,
   createMuiTheme,
@@ -14,6 +15,7 @@ import {
 } from "@material-ui/core/styles";
 
 import store from "./store";
+
 import {
   fetchMovieByTitle,
   clearMovieAC,
@@ -40,6 +42,7 @@ import {
   getMarker,
   zoomToSF
 } from "./actions/map_actions";
+
 import { getLocDataReqManager, zeroCounters } from "./actions/location_actions";
 
 let theme = createMuiTheme();
@@ -193,7 +196,7 @@ class App extends Component {
       clearGooglePlaceResults,
       zeroCounters
     } = this.props;
-
+    //TODO Make everything an action unless it only affects local state
     deleteMarkers();
     zeroCounters();
     clearGooglePlaceResults();

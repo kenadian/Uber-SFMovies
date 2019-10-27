@@ -58,8 +58,7 @@ export default function(state = initialState, action) {
 
     case MAP_SHOW_ALL_LOCATIONS:
       return {
-        ...state,
-        markerWindows: []
+        ...state
       };
     case MAP_SET_MAP_ON_ONE:
       const markers = state.markers.filter(value => value !== action.payload);
@@ -73,10 +72,13 @@ export default function(state = initialState, action) {
       return { ...state, markers, markerWindows: newMarkerWindow };
 
     case MAP_OPEN_INFO_WINDOW:
-      const tempMarkerWindows = state.markerWindows.slice();
-      tempMarkerWindows.push(action.payload[0]);
+      if (action.payload.length > 0) {
+        const tempMarkerWindows = state.markerWindows.slice();
+        tempMarkerWindows.push(action.payload[0]);
 
-      return { ...state, markerWindows: tempMarkerWindows };
+        return { ...state, markerWindows: tempMarkerWindows };
+      }
+      return { ...state };
     case MAP_CLOSE_INFO_WINDOW:
       const markerWindows = state.markerWindows.filter(
         markerWindow => markerWindow !== action.payload[0]
@@ -95,11 +97,10 @@ export default function(state = initialState, action) {
           }).length === 1
         );
       });
-
       return {
         ...state,
         markers: markedLocations.map(loc => loc.id),
-        markerWindows: [...state.markerWindows, action.locId]
+        markerWindows: action.openWindow ? [action.locId] : []
       };
     case MOVIE_DELETE_VIEWED_TITLES:
       return { ...state, viewedTitles: action.payload };

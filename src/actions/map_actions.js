@@ -56,7 +56,7 @@ export function zoomToSF() {
   movieMap.setZoom(calculateZoom());
   return { type: MAP_ZOOM_TO_SF };
 }
-
+//TODO This seems inefficient. Can it be improved?
 export function closeAllInfoWindows() {
   movieMap.markers.forEach(marker => {
     marker.infoWindowForMarker.close();
@@ -286,7 +286,12 @@ export function getLocationDataInBackground(movieLocation) {
 }
 
 export function showAllLocations() {
-  deleteMarkers();
+  const currentOpenInfoWindow =
+    store.getState().movies.markerWindows.length > 0
+      ? store.getState().movies.markerWindows[0]
+      : null;
+
+  store.dispatch(deleteMarkers());
 
   //Todo make function composable
   //return array of values that have been sucessfully plotted
@@ -322,8 +327,9 @@ export function showAllLocations() {
     );
     return true;
   });
-
-  openInfoWindow(store.getState().movies.markerWindows[0]);
+  if (currentOpenInfoWindow) {
+    store.dispatch(openInfoWindow(currentOpenInfoWindow));
+  }
   movieMap.setCenter(sanFrancisco);
   movieMap.setZoom(calculateZoom());
 
@@ -408,7 +414,8 @@ export function createMarker(markerData) {
   return {
     type: MAP_CREATE_MARKER,
     payload,
-    locId
+    locId,
+    openWindow
   };
 }
 
