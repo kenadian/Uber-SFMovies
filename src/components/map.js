@@ -36,13 +36,10 @@ class MainMap extends Component {
   }
 
   render() {
-    const { classes, movieDetails } = this.props;
+    const { classes } = this.props;
 
     return (
       <React.Fragment>
-        <Typography variant="h4" className={classes.title}>
-          {movieDetails.title}
-        </Typography>
         <div className={classes.movieMap} id={this.props.id} />
       </React.Fragment>
     );

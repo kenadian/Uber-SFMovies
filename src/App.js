@@ -365,11 +365,7 @@ class App extends Component {
             />
           </main>
           {/* )} */}
-          <MainMap
-            id="movieMap"
-            initMap={initMap}
-            movieDetails={movieDetails}
-          />
+          <MainMap id="movieMap" initMap={initMap} />
         </div>
       </MuiThemeProvider>
     );
