@@ -1,31 +1,8 @@
 <img src="http://sfmapproject.s3-website.ca-central-1.amazonaws.com/images/splash.jpg" alt="San Francisco" width="400px" />
 
-# Uber Programming Challenge - San Francisco Movie Locations
+# San Francisco Movie Locations
 
 The task was to create an application that displays on a map the location of movies filmed in San Francisco.
-
-## Project Goals
-
-The application should use some number of the following:
-
-1. Consume a webservice/API
-2. Utilize data storage
-3. Have a UI that allows users to search for film locations
-
-The data is available at [DataSF:Film Locations](https://data.sfgov.org)
-Please design, test and document your code as if it were going into production and share a link
-to the hosted repository (e.g. GitHub, BitBucket).
-
-Choose one of the following technical tracks that best suits your skillset:
-
-- Full-stack/Back-end: include a minimal front-end (e.g. a static view or API docs). Write,
-  document and test your API as if it will be used by other services.
-- Front-end track: include a minimal back-end, or use the data service directly. Focus on
-  making the interface as polished as possible.
-
-## Challenges
-
-I found that retrieving place data needed to plot markers from Google needed the most attention. I spent a lot of time trying to optimize the throttled behaviour of the api, eventually settling on a solution that uses setTimeout and increasing the timeout value when I recevied an "OVER_LIMIT" status in the response.
 
 ## Demonstrated Proficiencies
 
