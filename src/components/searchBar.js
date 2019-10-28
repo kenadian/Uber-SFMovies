@@ -90,37 +90,48 @@ const styles = theme => ({
     [theme.breakpoints.down("sm")]: {
       width: "unset"
     },
-    marginLeft: 25,
+
     color: "inherit",
     width: "100%",
     fontSize: 24,
     flexGrow: 1
   },
   inputInput: {
-    paddingTop: theme.spacing.unit,
-    paddingRight: theme.spacing.unit,
-    paddingBottom: theme.spacing.unit,
-    paddingLeft: theme.spacing.unit * 3,
+    paddingTop: 0,
+    paddingRight: 0,
+    paddingBottom: 0,
+    paddingLeft: 0,
+    marginLeft: 55,
+    marginTop: 0,
+    marginRight: 0,
+    marginBottom: 0,
     transition: theme.transitions.create("width"),
     // width: "100%",
-    height: 40,
+    height: 54,
     fontSize: 22,
-    width: 400,
-    marginLeft: 25,
+    width: 550,
     [theme.breakpoints.down("sm")]: {
-      width: 207,
-      paddingLeft: theme.spacing.unit * 5,
+      width: 291,
       fontSize: 18
     }
   },
   displayTitle: {
+    display: "flex",
+    alignItems: "center",
+    height: 54,
     color: "white",
     fontSize: 22,
     width: 550,
-    marginLeft: theme.spacing.unit * 6,
-    marginTop: theme.spacing.unit * 1.5,
+    marginLeft: 55,
+    marginTop: 0,
     marginRight: 0,
-    marginBottom: theme.spacing.unit * 1.5
+    marginBottom: 0,
+    [theme.breakpoints.down("sm")]: {
+      fontSize: 18,
+      width: 291,
+      overflow: "scroll",
+      whiteSpace: "nowrap"
+    }
   },
   input: {
     fontSize: 48
