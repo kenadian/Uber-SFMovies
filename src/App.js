@@ -128,11 +128,8 @@ class App extends Component {
     ).payload[0][0];
     markerData = { ...markerData, openWindow: true, locId };
     //NOTE markerData = {position, imgUrl, funFacts, locName, openWindow}
-
     this.props.createMarker(markerData);
-    if (!this.state.keepDrawerOpen) {
-      this.handleDrawerClose();
-    }
+    this.handleDrawerClose();
     return { result: "added" };
   };
 
@@ -141,9 +138,11 @@ class App extends Component {
   };
 
   handleDrawerClose = () => {
-    if (window.innerWidth < 415) {
+    // if (window.innerWidth < 415) {
+    if (!this.state.keepDrawerOpen) {
       this.setState({ drawerOpen: false });
     }
+    // }
   };
 
   handleModalOpen = event => {
