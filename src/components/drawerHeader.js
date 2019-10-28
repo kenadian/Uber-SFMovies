@@ -162,23 +162,23 @@ class drawerHead extends Component {
               })}
           </Menu>
         </div>
-        {window.innerWidth < 415 && (
-          <FormGroup row>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={keepDrawerOpen}
-                  onChange={handleOnClickKeepDrawerOpen}
-                  value="true"
-                  classes={{ root: classes.checkbox }}
-                />
-              }
-              label="Keep Open"
-              classes={{ label: classes.checkboxLabel }}
-              labelPlacement="bottom"
-            />
-          </FormGroup>
-        )}
+        {/* {window.innerWidth < 415 && ( */}
+        <FormGroup row>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={keepDrawerOpen}
+                onChange={handleOnClickKeepDrawerOpen}
+                value="true"
+                classes={{ root: classes.checkbox }}
+              />
+            }
+            label="Keep Open"
+            classes={{ label: classes.checkboxLabel }}
+            labelPlacement="bottom"
+          />
+        </FormGroup>
+        {/* )} */}
       </div>
     );
   }
