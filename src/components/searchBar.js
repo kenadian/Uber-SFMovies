@@ -77,7 +77,7 @@ const styles = theme => ({
     [theme.breakpoints.down("sm")]: {
       width: theme.spacing.unit * 8
     },
-    width: theme.spacing.unit * 9,
+    width: theme.spacing.unit * 5,
     height: "100%",
     position: "absolute",
     pointerEvents: "none",
@@ -85,6 +85,7 @@ const styles = theme => ({
     alignItems: "center",
     justifyContent: "center"
   },
+
   inputRoot: {
     [theme.breakpoints.down("sm")]: {
       width: "unset"
@@ -99,7 +100,7 @@ const styles = theme => ({
     paddingTop: theme.spacing.unit,
     paddingRight: theme.spacing.unit,
     paddingBottom: theme.spacing.unit,
-    paddingLeft: theme.spacing.unit * 10,
+    paddingLeft: theme.spacing.unit * 3,
     transition: theme.transitions.create("width"),
     // width: "100%",
     height: 40,
@@ -112,6 +113,18 @@ const styles = theme => ({
       fontSize: 18
     }
   },
+  displayTitle: {
+    color: "white",
+    fontSize: 22,
+    width: 550,
+    marginLeft: theme.spacing.unit * 6,
+    marginTop: theme.spacing.unit * 1.5,
+    marginRight: 0,
+    marginBottom: theme.spacing.unit * 1.5
+  },
+  input: {
+    fontSize: 48
+  },
   searchListOff: { display: "none" },
   searchListOn: {
     position: "absolute",
@@ -122,6 +135,7 @@ const styles = theme => ({
     zIndex: 100
   }
 });
+
 class SearchBar extends Component {
   constructor(props) {
     super(props);
@@ -141,9 +155,14 @@ class SearchBar extends Component {
       handleDrawerClose,
       fetchMovieAC,
       handleOnSelect,
-      handleDrawerOpen
+      handleDrawerOpen,
+      movieDetails,
+      movieSearchResults,
+      hideTitle,
+      handleOnFocusSearch,
+      handleOnBlurSearch
     } = this.props;
-    const searchResults = this.props.movieSearchResults;
+    const searchResults = movieSearchResults;
 
     return (
       <AppBar
@@ -152,11 +171,18 @@ class SearchBar extends Component {
           [classes.appBarShift]: open
         })}
       >
+        {/* <Toolbar disableGutters={!open}> */}
         <Toolbar disableGutters={!open}>
           <Typography variant="h6" color="inherit" className={classes.title}>
             SF Movies
           </Typography>
-          <Grid container className={classes.search}>
+          <Grid
+            container
+            direction="row"
+            justify="space-between"
+            alignItems="center"
+            className={classes.search}
+          >
             {!isGettingGooglePlaceResults && (
               <Grid item className={classes.searchIcon}>
                 <SearchIcon />
@@ -167,92 +193,103 @@ class SearchBar extends Component {
                 <CircularProgress style={{ height: 20, width: 20 }} />
               </Grid>
             )}
-            <Grid item>
-              <Autocomplete
-                renderInput={props => {
-                  return (
-                    <InputBase
-                      classes={{
-                        root: classes.inputRoot,
-                        input: classes.inputInput
-                      }}
-                      inputProps={props}
-                      disabled={isGettingGooglePlaceResults}
-                    />
-                  );
-                }}
-                inputProps={{
-                  id: "term",
-                  placeholder: "Film Title (min 3 letters)",
-                  // className: classes.uiWidget,
-                  // style: { height: 40, fontSize: 22, width: 400, marginLeft: 25 },
-                  autoFocus: true
-                }}
-                getItemValue={item => {
-                  return String(item.term);
-                }}
-                items={searchResults ? searchResults : []}
-                value={this.state.value}
-                onChange={(event, value) => {
-                  this.setState({ value: value });
-
-                  if (event.target.value.length === 0) {
-                    handleDrawerClose();
-                  }
-                  if (event.target.value.length >= 3) {
-                    fetchMovieAC(value).catch(err =>
-                      console.error(`Can't get value for AutoComplete${err}`)
-                    );
-                  }
-                }}
-                onSelect={(value, item) => {
-                  this.setState({
-                    value: item.title,
-                    isFetching: true
-                  });
-                  handleOnSelect(item.title);
-
-                  //
-                }}
-                renderMenu={children => {
-                  return (
-                    <List
-                      id="movieSearch"
-                      className={
-                        children.length === 0
-                          ? classes.searchListOff
-                          : classes.searchListOn
-                      }
-                    >
-                      {children}
-                    </List>
-                  );
-                }}
-                renderItem={(item, isHighlighted) => {
-                  return (
-                    <ListItem
-                      className={
-                        isHighlighted ? classes.itemHighlight : classes.item
-                      }
-                      key={item.title}
-                    >
-                      <ListItemText
-                        style={{
-                          height: 25,
-                          minWidth: 200,
-                          paddingRight: 25,
-                          color: "black"
+            {hideTitle && (
+              <Grid item>
+                <Autocomplete
+                  renderInput={props => {
+                    return (
+                      <InputBase
+                        classes={{
+                          root: classes.inputRoot,
+                          input: classes.inputInput
                         }}
+                        inputProps={props}
+                        disabled={isGettingGooglePlaceResults}
+                      />
+                    );
+                  }}
+                  inputProps={{
+                    id: "term",
+                    placeholder: "Film Title (min 3 letters)",
+                    autoFocus: true,
+                    onBlur: function(event) {
+                      handleOnBlurSearch();
+                    }
+                  }}
+                  getItemValue={item => {
+                    return String(item.term);
+                  }}
+                  items={searchResults ? searchResults : []}
+                  value={this.state.value}
+                  onChange={(event, value) => {
+                    this.setState({ value: value });
+                    if (event.target.value.length === 0) {
+                      handleDrawerClose();
+                    }
+                    if (event.target.value.length >= 3) {
+                      fetchMovieAC(value).catch(err =>
+                        console.error(`Can't get value for AutoComplete${err}`)
+                      );
+                    }
+                  }}
+                  onSelect={(value, item) => {
+                    this.setState({
+                      value: "",
+                      isFetching: true
+                    });
+                    handleOnSelect(item.title);
+                  }}
+                  renderMenu={children => {
+                    return (
+                      <List
+                        id="movieSearch"
+                        className={
+                          children.length === 0
+                            ? classes.searchListOff
+                            : classes.searchListOn
+                        }
                       >
-                        {item.title}{" "}
-                      </ListItemText>
-                    </ListItem>
-                  );
-                }}
-                autoHighlight={true}
-                type="text"
-              />
-            </Grid>
+                        {children}
+                      </List>
+                    );
+                  }}
+                  renderItem={(item, isHighlighted) => {
+                    return (
+                      <ListItem
+                        className={
+                          isHighlighted ? classes.itemHighlight : classes.item
+                        }
+                        key={item.title}
+                      >
+                        <ListItemText
+                          style={{
+                            height: 25,
+                            minWidth: 200,
+                            paddingRight: 25,
+                            color: "black"
+                          }}
+                        >
+                          {item.title}{" "}
+                        </ListItemText>
+                      </ListItem>
+                    );
+                  }}
+                  autoHighlight={true}
+                  type="text"
+                />
+              </Grid>
+            )}
+            {!hideTitle && (
+              <Grid item onClick={handleOnFocusSearch}>
+                <Typography
+                  // className={classes.inputInput}
+                  className={classes.displayTitle}
+                  style={{ color: "white" }}
+                >
+                  {movieDetails.title}
+                </Typography>
+              </Grid>
+            )}
           </Grid>
           <div className={classes.grow} />
           <IconButton
@@ -277,16 +314,12 @@ SearchBar.propTypes = {
   lookupLocation: PropTypes.func,
   createMarkers: PropTypes.func,
   movieSearchResults: PropTypes.array,
-  movieLocationResults: PropTypes.array,
   open: PropTypes.bool
 };
 
 function mapStateToProps(state) {
   return {
-    movieSearchResults: state.movies.searchResults,
-    movieLocationResults: state.maps.movieLocationData
-    // isGettingGooglePlaceResults: state.maps.isGettingGooglePlaceResults
-    // googlePlaceResultsOverLimit: state.maps.googlePlaceResultsOverLimit
+    movieSearchResults: state.movies.searchResults
   };
 }
 

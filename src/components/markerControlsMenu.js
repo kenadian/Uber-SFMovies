@@ -34,7 +34,7 @@ class MarkerControlsMenu extends PureComponent {
   };
 
   handleOnClickHistory = event => {
-    console.log("history");
+    console.log("todo build history");
   };
   render() {
     const { movieDetails, classes, zoomToSF } = this.props;

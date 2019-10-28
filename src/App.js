@@ -72,12 +72,25 @@ class App extends Component {
         ? false
         : true,
     modalOpen: false,
-    errorMessage: ""
+    errorMessage: "",
+    hideTitle: true
   };
 
   componentDidMount() {
     this.props.getViewedTitles();
   }
+
+  handleOnFocusSearch = () => {
+    this.setState({ hideTitle: true });
+  };
+  handleOnBlurSearch = () => {
+    if (this.props.movieDetails.hasOwnProperty("title")) {
+      this.setState({ hideTitle: false });
+      return { hideTitle: false };
+    }
+    this.setState({ hideTitle: true });
+    return { hideTitle: true };
+  };
   handleShowAll = () => {
     this.props.showAllLocations();
   };
@@ -258,6 +271,7 @@ class App extends Component {
 
       .then(request => {
         getViewedTitles();
+        this.setState({ hideTitle: false });
       })
       .catch(err => {
         if (err === "no data") {
@@ -305,8 +319,12 @@ class App extends Component {
               deleteMarkers={deleteMarkers}
               open={this.state.open}
               drawerOpen={drawerOpen}
+              movieDetails={movieDetails}
               handleOnSelect={this.handleOnSelect}
               isGettingGooglePlaceResults={isGettingGooglePlaceResults}
+              hideTitle={this.state.hideTitle}
+              handleOnFocusSearch={this.handleOnFocusSearch}
+              handleOnBlurSearch={this.handleOnBlurSearch}
             />
           )}
           {this.getWidth() < 420 && (
